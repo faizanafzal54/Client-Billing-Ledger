@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Company {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  key          String  @unique @default("company")
+  name         String
+  tagline      String  @default("")
+  address      String  @default("")
+  city         String  @default("")
+  phone        String  @default("")
+  email        String  @default("")
+  ntn          String  @default("")
+  strn         String  @default("")
+  bankName     String  @default("")
+  bankAccount  String  @default("")
+  bankIban     String  @default("")
+  taxPercent   Float   @default(0)
+  invoiceNotes String  @default("Goods once sold will not be taken back. E. & O.E.")
+}
+
+model Client {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  prefix    String
+  address   String    @default("")
+  city      String    @default("")
+  phone     String    @default("")
+  email     String    @default("")
+  ntn       String    @default("")
+  notes     String    @default("")
+  invoices  Invoice[]
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  unit        String        @default("KG")
+  defaultRate Float         @default(0)
+  description String        @default("")
+  items       InvoiceItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Invoice {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  globalNumber String        @unique
+  clientNumber String
+  date         DateTime
+  dueDate      DateTime?
+  poNumber     String        @default("")
+  vehicleNo    String        @default("")
+  clientId     String        @db.ObjectId
+  client       Client        @relation(fields: [clientId], references: [id])
+  items        InvoiceItem[]
+  payments     Payment[]
+  notes        String        @default("")
+  taxPercent   Float         @default(0)
+  discount     Float         @default(0)
+  subtotal     Float
+  taxAmount    Float
+  total        Float
+  status       String        @default("unpaid")
+  createdBy    String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([clientId, clientNumber])
+}
+
+model InvoiceItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceId   String   @db.ObjectId
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId   String?  @db.ObjectId
+  product     Product? @relation(fields: [productId], references: [id])
+  description String
+  quantity    Float
+  unit        String
+  rate        Float
+  amount      Float
+  sortOrder   Int      @default(0)
+}
+
+model Payment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  clientId  String   @db.ObjectId
+  client    Client   @relation(fields: [clientId], references: [id])
+  invoiceId String?  @db.ObjectId
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  amount    Float
+  date      DateTime
+  method    String   @default("cash")
+  reference String   @default("")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model Counter {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  key   String @unique
+  value Int    @default(0)
+}

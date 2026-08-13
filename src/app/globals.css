@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #14221c;
+  --ink-soft: #2b3d33;
+  --brass: #b08d57;
+  --brass-dark: #8a6a38;
+  --cream: #f3eee4;
+  --paper: #fbfaf6;
+  --line: #d8d0c2;
+  --good: #1f7a4d;
+  --warn: #b45309;
+  --bad: #9f1239;
+  --muted: #6b645b;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-brass: var(--brass);
+  --color-brass-dark: var(--brass-dark);
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-line: var(--line);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-fraunces);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: white;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+  outline: none;
+}
+
+.field:focus {
+  border-color: var(--brass);
+  box-shadow: 0 0 0 3px rgb(176 141 87 / 0.2);
+}
+
+.field.has-toggle {
+  padding-right: 2.75rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card {
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.btn,
+.btn-primary,
+.btn-brass,
+.btn-ghost,
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 0;
+  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.btn:disabled,
+.btn-primary:disabled,
+.btn-brass:disabled,
+.btn-ghost:disabled,
+.btn-danger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--ink-soft);
+}
+
+.btn-brass {
+  background: var(--brass);
+  color: var(--ink);
+}
+
+.btn-brass:hover:not(:disabled) {
+  background: var(--brass-dark);
+  color: var(--cream);
+}
+
+.btn-ghost {
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--ink);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--cream);
+}
+
+.btn-danger {
+  background: var(--bad);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.status-unpaid {
+  background: rgb(159 18 57 / 0.1);
+  color: var(--bad);
+}
+
+.status-partial {
+  background: rgb(180 83 9 / 0.1);
+  color: var(--warn);
+}
+
+.status-paid {
+  background: rgb(31 122 77 / 0.1);
+  color: var(--good);
+}
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-sheet,
+  .invoice-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
