@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { DeleteInvoiceButton } from "@/components/delete-invoice-button"
 import { InvoiceDocument } from "@/components/invoice-document"
-import { PaymentForm } from "@/components/payment-form"
+import { InvoicePaymentList, PaymentForm } from "@/components/payment-form"
 import { PageHeader, StatusBadge } from "@/components/ui"
 import { formatPKR } from "@/lib/money"
 import { prisma } from "@/lib/prisma"
@@ -66,18 +66,19 @@ export default async function InvoiceDetailPage({
         </div>
         <div className="card p-4 sm:p-5">
           <h2 className="font-display text-xl">Payments on this invoice</h2>
-          <ul className="mt-4 space-y-3">
-            {invoice.payments.length === 0 ? (
-              <li className="text-sm text-muted">No payments recorded yet.</li>
-            ) : (
-              invoice.payments.map((payment) => (
-                <li key={payment.id} className="flex items-center justify-between border-b border-line pb-3 text-sm">
-                  <span className="capitalize">{payment.method}</span>
-                  <span>{formatPKR(payment.amount)}</span>
-                </li>
-              ))
-            )}
-          </ul>
+          <InvoicePaymentList
+            clientId={invoice.clientId}
+            invoiceId={invoice.id}
+            payments={invoice.payments.map((payment) => ({
+              id: payment.id,
+              amount: payment.amount,
+              date: payment.date.toISOString(),
+              method: payment.method,
+              reference: payment.reference,
+              notes: payment.notes,
+              invoiceId: payment.invoiceId || invoice.id,
+            }))}
+          />
         </div>
       </section>
     </div>

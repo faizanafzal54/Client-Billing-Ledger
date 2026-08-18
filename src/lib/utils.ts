@@ -32,3 +32,20 @@ export function displayInvoiceNo(globalNumber: string) {
   const digits = globalNumber.replace(/\D/g, "") || "0"
   return `INV${digits.padStart(5, "0")}`
 }
+
+export function monthKey(value: Date | string) {
+  const date = typeof value === "string" ? new Date(value) : value
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
+}
+
+export function monthLabel(key: string) {
+  const [year, month] = key.split("-").map(Number)
+  return new Date(year, month - 1, 1).toLocaleString("en-GB", {
+    month: "long",
+    year: "numeric",
+  })
+}
+
+export function fileSlug(value: string) {
+  return value.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "file"
+}

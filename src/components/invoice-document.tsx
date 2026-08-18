@@ -69,9 +69,13 @@ export function InvoiceDocument({
       </svg>
 
       <div className="relative z-10 px-8 pb-16 pt-10 sm:px-12">
-        <header className="flex items-start justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <img src="/aac-logo.svg" alt="AAC" className="h-20 w-20 rounded-md sm:h-24 sm:w-24" />
+        <header className="flex items-start justify-between gap-8">
+          <div className="flex min-w-0 items-start gap-4">
+            <img
+              src="/aac-logo.png"
+              alt="Asghar Ali Chemicals"
+              className="h-28 w-auto object-contain sm:h-32"
+            />
             <div className="pt-1 text-[13px] leading-6">
               <p className="text-lg font-extrabold tracking-wide">{company.name.toUpperCase()}</p>
               {company.city ? <p>{company.city.toUpperCase()}</p> : null}
@@ -80,8 +84,11 @@ export function InvoiceDocument({
               {company.email ? <p>{company.email}</p> : null}
             </div>
           </div>
-          <div className="text-right">
-            <h1 className="text-4xl font-black tracking-wide sm:text-5xl">INVOICE</h1>
+          <div className="min-w-[220px] shrink-0 text-right">
+            <p className="text-lg font-extrabold uppercase">{invoice.client.name}</p>
+            {invoice.client.address ? <p className="text-sm">{invoice.client.address}</p> : null}
+            {invoice.client.city ? <p className="text-sm">{invoice.client.city}</p> : null}
+            {invoice.client.phone ? <p className="text-sm">{invoice.client.phone}</p> : null}
             <dl className="mt-4 space-y-1 text-sm">
               <div className="flex justify-end gap-3">
                 <dt className="font-semibold">Invoice #:</dt>
@@ -111,15 +118,7 @@ export function InvoiceDocument({
           </div>
         </header>
 
-        <section className="mt-10">
-          <p className="text-xs font-bold tracking-[0.18em] text-[#2f6fed]">BILL TO</p>
-          <p className="mt-1 text-lg font-extrabold uppercase">{invoice.client.name}</p>
-          {invoice.client.address ? <p className="text-sm">{invoice.client.address}</p> : null}
-          {invoice.client.city ? <p className="text-sm">{invoice.client.city}</p> : null}
-          {invoice.client.phone ? <p className="text-sm">{invoice.client.phone}</p> : null}
-        </section>
-
-        <table className="mt-8 w-full border-collapse text-sm">
+        <table className="mt-10 w-full border-collapse text-sm">
           <thead>
             <tr className="bg-[#2f6fed] text-white">
               <th className="px-4 py-2.5 text-left font-semibold">Description</th>

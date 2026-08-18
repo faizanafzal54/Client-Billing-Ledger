@@ -140,6 +140,10 @@ export async function getClientReport(clientId: string) {
       debit: invoice.total,
       credit: 0,
       note: invoice.notes,
+      method: "",
+      notes: "",
+      invoiceId: "",
+      paymentReference: "",
     })),
     ...client.payments.map((payment) => ({
       id: payment.id,
@@ -149,6 +153,10 @@ export async function getClientReport(clientId: string) {
       debit: 0,
       credit: payment.amount,
       note: payment.notes,
+      method: payment.method,
+      notes: payment.notes,
+      invoiceId: payment.invoiceId || "",
+      paymentReference: payment.reference,
     })),
   ].sort((a, b) => a.date.getTime() - b.date.getTime())
 

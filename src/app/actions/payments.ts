@@ -49,6 +49,41 @@ export async function recordPayment(formData: FormData): Promise<ActionResult> {
   return { ok: true, id: payment.id }
 }
 
+export async function updatePayment(formData: FormData): Promise<ActionResult> {
+  await requireUser()
+  const id = String(formData.get("id") || "")
+  const amount = Number(formData.get("amount") || 0)
+  if (!id) return { ok: false, error: "Missing payment." }
+  if (!(amount > 0)) return { ok: false, error: "Enter a payment amount." }
+
+  const existing = await prisma.payment.findUnique({ where: { id } })
+  if (!existing) return { ok: false, error: "Payment not found." }
+
+  const invoiceId = String(formData.get("invoiceId") || "") || null
+  await prisma.payment.update({
+    where: { id },
+    data: {
+      amount,
+      date: new Date(String(formData.get("date") || existing.date.toISOString())),
+      method: String(formData.get("method") || existing.method),
+      reference: String(formData.get("reference") || "").trim(),
+      notes: String(formData.get("notes") || "").trim(),
+      invoiceId,
+    },
+  })
+
+  await refreshInvoiceStatus(existing.invoiceId)
+  if (invoiceId !== existing.invoiceId) await refreshInvoiceStatus(invoiceId)
+
+  revalidatePath("/dashboard")
+  revalidatePath("/invoices")
+  revalidatePath(`/clients/${existing.clientId}`)
+  revalidatePath("/reports")
+  if (existing.invoiceId) revalidatePath(`/invoices/${existing.invoiceId}`)
+  if (invoiceId && invoiceId !== existing.invoiceId) revalidatePath(`/invoices/${invoiceId}`)
+  return { ok: true, id }
+}
+
 export async function deletePayment(formData: FormData): Promise<ActionResult> {
   await requireUser()
   const id = String(formData.get("id") || "")
