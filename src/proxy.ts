@@ -9,11 +9,14 @@ export function proxy(request: NextRequest) {
   const isPublic = publicRoutes.includes(pathname)
 
   if (!session && !isPublic) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
   if (session && isPublic) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+    return NextResponse.redirect(new URL("/invoices", request.url))
   }
 
   return NextResponse.next()

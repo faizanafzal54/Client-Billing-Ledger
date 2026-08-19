@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { createProduct, deleteProduct, updateProduct } from "@/app/actions/products"
 import { ConfirmDeleteButton } from "@/components/confirm-dialog"
 import { Spinner } from "@/components/ui"
+import { notifyDataChanged } from "@/lib/client-data"
 
 type ProductValues = {
   id?: string
@@ -32,6 +33,7 @@ export function ProductForm({
       if (!result.ok) setError(result.error || "Could not save product.")
       else {
         router.refresh()
+        notifyDataChanged()
         onDone?.()
       }
     })

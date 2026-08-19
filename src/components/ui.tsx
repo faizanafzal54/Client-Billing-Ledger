@@ -24,12 +24,12 @@ export function PageHeader({
   actions?: React.ReactNode
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="font-display text-3xl text-ink">{title}</h1>
+    <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl text-ink sm:text-3xl">{title}</h1>
         {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 flex-wrap justify-end gap-2">{actions}</div> : null}
     </div>
   )
 }
@@ -46,11 +46,11 @@ export function StatCard({
   tone?: "default" | "good" | "warn" | "bad"
 }) {
   return (
-    <div className="card p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{label}</p>
+    <div className="card p-2.5 sm:p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted sm:text-xs sm:tracking-[0.16em]">{label}</p>
       <p
         className={cn(
-          "mt-2 font-display text-2xl",
+          "mt-1 font-display text-base leading-tight break-words sm:mt-2 sm:text-2xl",
           tone === "good" && "text-good",
           tone === "warn" && "text-warn",
           tone === "bad" && "text-bad",

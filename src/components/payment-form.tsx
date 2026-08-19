@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { recordPayment, updatePayment } from "@/app/actions/payments"
 import { Spinner } from "@/components/ui"
+import { notifyDataChanged } from "@/lib/client-data"
 import { formatPKR } from "@/lib/money"
 import { formatDate, todayISO } from "@/lib/utils"
 
@@ -53,6 +54,7 @@ export function PaymentForm({
       }
       setMessage(editing ? "Payment updated." : "Payment recorded.")
       router.refresh()
+      notifyDataChanged()
       onDone?.()
     })
   }
@@ -64,7 +66,7 @@ export function PaymentForm({
       {invoiceId || (payment && !showInvoiceSelect) ? (
         <input type="hidden" name="invoiceId" value={lockedInvoiceId} />
       ) : null}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label" htmlFor="payment-amount">
             Amount
@@ -142,7 +144,7 @@ export function PaymentForm({
           </div>
         )}
         {showInvoiceSelect ? (
-          <div className="sm:col-span-2">
+          <div className="col-span-2">
             <label className="label" htmlFor="payment-reference">
               Reference
             </label>
@@ -155,7 +157,7 @@ export function PaymentForm({
             />
           </div>
         ) : null}
-        <div className="sm:col-span-2">
+        <div className="col-span-2">
           <label className="label" htmlFor="payment-notes">
             Notes
           </label>

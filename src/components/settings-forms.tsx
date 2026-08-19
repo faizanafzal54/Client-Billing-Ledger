@@ -6,6 +6,7 @@ import { logout } from "@/app/actions/auth"
 import { PasswordField } from "@/components/password-field"
 import { SubmitButton } from "@/components/submit-button"
 import { Spinner } from "@/components/ui"
+import { notifyDataChanged } from "@/lib/client-data"
 
 type CompanyValues = {
   name: string
@@ -41,6 +42,7 @@ export function SettingsForms({ company }: { company: CompanyValues }) {
             startCompany(async () => {
               await updateCompany(formData)
               setCompanyMessage("Company details saved.")
+              notifyDataChanged()
             })
           }}
         >

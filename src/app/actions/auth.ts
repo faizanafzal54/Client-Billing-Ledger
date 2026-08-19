@@ -33,7 +33,7 @@ export async function login(prevState: LoginState, formData: FormData) {
     email: user.email,
     name: user.name,
   })
-  redirect("/dashboard")
+  redirect("/invoices")
 }
 
 export async function logout() {

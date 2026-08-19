@@ -4,8 +4,8 @@ import { displayInvoiceNo, formatInvoiceDate } from "@/lib/utils"
 type InvoiceDoc = {
   globalNumber: string
   clientNumber: string
-  date: Date
-  dueDate: Date | null
+  date: Date | string
+  dueDate: Date | string | null
   poNumber: string
   vehicleNo: string
   notes: string

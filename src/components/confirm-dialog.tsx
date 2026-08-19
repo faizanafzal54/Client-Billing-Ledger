@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react"
 import { X } from "lucide-react"
 import type { ActionResult } from "@/lib/definitions"
 import { Spinner } from "@/components/ui"
+import { notifyDataChanged } from "@/lib/client-data"
 
 export function ConfirmDialog({
   open,
@@ -123,6 +124,7 @@ export function ConfirmDeleteButton({
               return
             }
             setOpen(false)
+            notifyDataChanged()
           })
         }}
       />

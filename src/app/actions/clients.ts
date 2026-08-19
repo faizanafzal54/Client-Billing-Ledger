@@ -8,10 +8,8 @@ import type { ActionResult } from "@/lib/definitions"
 
 function readClient(formData: FormData) {
   const name = String(formData.get("name") || "").trim()
-  const prefix = String(formData.get("prefix") || slugPrefix(name)).trim()
   return {
     name,
-    prefix,
     address: String(formData.get("address") || "").trim(),
     city: String(formData.get("city") || "").trim(),
     phone: String(formData.get("phone") || "").trim(),
@@ -21,17 +19,27 @@ function readClient(formData: FormData) {
   }
 }
 
+async function uniqueClientPrefix(name: string) {
+  const base = slugPrefix(name)
+  const existing = await prisma.client.findMany({ select: { prefix: true } })
+  const taken = new Set(existing.map((client) => client.prefix.toLowerCase()))
+  if (!taken.has(base.toLowerCase())) return base
+  let n = 2
+  while (taken.has(`${base}${n}`.toLowerCase())) n += 1
+  return `${base}${n}`
+}
+
 export async function createClient(formData: FormData): Promise<ActionResult> {
   await requireUser()
   const data = readClient(formData)
   if (!data.name) return { ok: false, error: "Client name is required." }
-  if (!data.prefix) return { ok: false, error: "Invoice prefix is required (e.g. Turk)." }
 
-  const client = await prisma.client.create({ data })
+  const prefix = await uniqueClientPrefix(data.name)
+  const client = await prisma.client.create({ data: { ...data, prefix } })
   revalidatePath("/clients")
   revalidatePath("/invoices")
   revalidatePath("/dashboard")
-  return { ok: true, id: client.id }
+  return { ok: true, id: client.id, prefix: client.prefix }
 }
 
 export async function updateClient(formData: FormData): Promise<ActionResult> {
@@ -41,7 +49,13 @@ export async function updateClient(formData: FormData): Promise<ActionResult> {
   if (!id) return { ok: false, error: "Missing client." }
   if (!data.name) return { ok: false, error: "Client name is required." }
 
-  await prisma.client.update({ where: { id }, data })
+  const existing = await prisma.client.findUnique({ where: { id } })
+  if (!existing) return { ok: false, error: "Client not found." }
+
+  await prisma.client.update({
+    where: { id },
+    data: { ...data, prefix: existing.prefix },
+  })
   revalidatePath("/clients")
   revalidatePath(`/clients/${id}`)
   revalidatePath("/invoices")

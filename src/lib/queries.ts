@@ -35,7 +35,7 @@ export async function getDashboardData() {
   const [invoices, payments, clients, products] = await Promise.all([
     prisma.invoice.findMany({
       include: { client: true, payments: true, items: true },
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     }),
     prisma.payment.findMany(),
     prisma.client.findMany({ orderBy: { name: "asc" } }),
@@ -121,7 +121,7 @@ export async function getClientReport(clientId: string) {
     include: {
       invoices: {
         include: { items: true, payments: true },
-        orderBy: { date: "desc" },
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       },
       payments: { orderBy: { date: "desc" } },
     },

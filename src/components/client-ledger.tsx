@@ -125,40 +125,106 @@ export function ClientLedger({
   }
 
   return (
-    <section className="card">
-      <div className="flex flex-col gap-3 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className="card min-w-0 overflow-hidden">
+      <div className="flex flex-col gap-3 border-b border-line px-4 py-3">
         <h2 className="font-display text-xl">Ledger</h2>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <label className="sr-only" htmlFor="ledger-month">
             Month
           </label>
-          <div className="w-full sm:w-44">
-            <select
-              id="ledger-month"
-              className="field"
-              value={month}
-              onChange={(event) => setMonth(event.target.value)}
-            >
-              <option value="all">All months</option>
-              {months.map((key) => (
-                <option key={key} value={key}>
-                  {monthLabel(key)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button className="btn-ghost" type="button" onClick={downloadPng} disabled={Boolean(exporting) || ledger.length === 0} aria-busy={exporting === "png"}>
+          <select
+            id="ledger-month"
+            className="field min-w-0 flex-1"
+            value={month}
+            onChange={(event) => setMonth(event.target.value)}
+          >
+            <option value="all">All months</option>
+            {months.map((key) => (
+              <option key={key} value={key}>
+                {monthLabel(key)}
+              </option>
+            ))}
+          </select>
+          <button className="btn-ghost shrink-0 px-3" type="button" onClick={downloadPng} disabled={Boolean(exporting) || ledger.length === 0} aria-busy={exporting === "png"}>
             {exporting === "png" ? <Spinner /> : <Download size={16} />}
             {exporting === "png" ? "PNG…" : "PNG"}
           </button>
-          <button className="btn-ghost" type="button" onClick={downloadPdf} disabled={Boolean(exporting) || ledger.length === 0} aria-busy={exporting === "pdf"}>
+          <button className="btn-ghost shrink-0 px-3" type="button" onClick={downloadPdf} disabled={Boolean(exporting) || ledger.length === 0} aria-busy={exporting === "pdf"}>
             {exporting === "pdf" ? <Spinner /> : <Download size={16} />}
             {exporting === "pdf" ? "PDF…" : "PDF"}
           </button>
         </div>
       </div>
       {exportError ? <p className="px-4 pt-3 text-sm text-bad">{exportError}</p> : null}
-      <div className="overflow-x-auto">
+
+      <div className="md:hidden">
+        {groups.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-muted">
+            {ledger.length === 0 ? "No ledger entries yet." : "No ledger entries for this month."}
+          </p>
+        ) : (
+          groups.flatMap((group) => {
+            const rows = []
+            if (groups.length > 1 || showOpening) {
+              rows.push(
+                <div key={`month-${group.key}`} className="border-t border-line bg-cream/60 px-4 py-2 text-sm font-semibold">
+                  {group.label}
+                </div>,
+              )
+            }
+            if (showOpening) {
+              rows.push(
+                <div key={`opening-${group.key}`} className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
+                  <p className="text-sm">Opening balance</p>
+                  <p className="shrink-0 text-sm">{formatPKR(group.opening)}</p>
+                </div>,
+              )
+            }
+            for (const row of group.rows) {
+              rows.push(
+                <div key={`${row.type}-${row.id}`} className="border-t border-line px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted">{formatDate(row.date)}</p>
+                      {row.type === "invoice" ? (
+                        <Link href={`/invoices/${row.id}`} className="block text-sm underline-offset-2 hover:underline">
+                          Invoice {row.reference}
+                        </Link>
+                      ) : (
+                        <p className="text-sm">Payment · {row.reference}</p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-start gap-1">
+                      <div className="text-right">
+                        <p className="text-sm">{formatPKR(row.balance)}</p>
+                        {row.debit ? <p className="text-xs text-muted">Dr {formatPKR(row.debit)}</p> : null}
+                        {row.credit ? <p className="text-xs text-good">Cr {formatPKR(row.credit)}</p> : null}
+                      </div>
+                      {row.type === "payment" ? (
+                        <button
+                          className="group relative rounded-md p-1 text-muted"
+                          type="button"
+                          onClick={() => setEditing(row)}
+                          title="Edit payment"
+                          aria-label="Edit payment"
+                        >
+                          <Pencil size={14} />
+                          <span className="pointer-events-none absolute bottom-full right-0 mb-1 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-cream group-hover:block group-focus-visible:block">
+                            Edit payment
+                          </span>
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>,
+              )
+            }
+            return rows
+          })
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-cream text-left text-xs uppercase tracking-wide text-muted">
             <tr>

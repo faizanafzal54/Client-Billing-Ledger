@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2, X } from "lucide-react"
+import { Plus, Trash2, X, ChevronDown, ChevronUp } from "lucide-react"
 import { createClient } from "@/app/actions/clients"
 import { createInvoice, updateInvoice } from "@/app/actions/invoices"
 import { createProduct } from "@/app/actions/products"
 import { SubmitButton } from "@/components/submit-button"
 import { Spinner } from "@/components/ui"
+import { notifyDataChanged } from "@/lib/client-data"
 import { todayISO } from "@/lib/utils"
 import { formatPKR } from "@/lib/money"
 
@@ -61,16 +62,13 @@ export function InvoiceForm({
   const [clientList, setClientList] = useState(clients)
   const [productList, setProductList] = useState(products)
   const [clientId, setClientId] = useState(invoice?.clientId ?? clients[0]?.id ?? "")
-  const [lines, setLines] = useState<Line[]>(
-    invoice?.lines?.length
-      ? invoice.lines
-      : [{ name: "", unit: "KG", quantity: 1, rate: 0 }],
-  )
+  const [lines, setLines] = useState<Line[]>(invoice?.lines?.length ? invoice.lines : [])
   const [taxPercent, setTaxPercent] = useState(invoice?.taxPercent ?? defaultTax)
   const [discount, setDiscount] = useState(invoice?.discount ?? 0)
   const [error, setError] = useState("")
   const [pending, setPending] = useState(false)
   const [showClient, setShowClient] = useState(false)
+  const [showClientMore, setShowClientMore] = useState(false)
   const [showProduct, setShowProduct] = useState<number | null>(null)
 
   const subtotal = useMemo(
@@ -80,6 +78,14 @@ export function InvoiceForm({
   const afterDiscount = Math.max(0, subtotal - discount)
   const taxAmount = afterDiscount * (taxPercent / 100)
   const total = afterDiscount + taxAmount
+
+  function addLine() {
+    setLines((current) => [...current, { name: "", unit: "KG", quantity: 1, rate: 0 }])
+  }
+
+  function removeLine(index: number) {
+    setLines((current) => current.filter((_, i) => i !== index))
+  }
 
   function updateLine(index: number, patch: Partial<Line>) {
     setLines((current) => current.map((line, i) => (i === index ? { ...line, ...patch } : line)))
@@ -121,12 +127,13 @@ export function InvoiceForm({
     const created = {
       id: result.id,
       name: String(formData.get("name") || ""),
-      prefix: String(formData.get("prefix") || ""),
+      prefix: result.prefix || "",
     }
     setClientList((current) => [...current, created])
     setClientId(created.id)
     setShowClient(false)
     router.refresh()
+    notifyDataChanged()
   }
 
   async function addProduct(formData: FormData, index: number) {
@@ -150,6 +157,7 @@ export function InvoiceForm({
     })
     setShowProduct(null)
     router.refresh()
+    notifyDataChanged()
   }
 
   return (
@@ -164,8 +172,8 @@ export function InvoiceForm({
             New client
           </button>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="sm:col-span-2">
+        <div className="grid gap-4">
+          <div>
             <label className="label">Client</label>
             <select className="field" name="clientId" value={clientId} onChange={(e) => setClientId(e.target.value)} required>
               <option value="">Select client</option>
@@ -176,128 +184,129 @@ export function InvoiceForm({
               ))}
             </select>
           </div>
-          <div>
-            <label className="label">Date</label>
-            <input className="field" type="date" name="date" defaultValue={invoice?.date ?? todayISO()} required />
-          </div>
-          <div>
-            <label className="label">Due date</label>
-            <input className="field" type="date" name="dueDate" defaultValue={invoice?.dueDate} />
-          </div>
-          <div>
-            <label className="label">P.O. number</label>
-            <input className="field" name="poNumber" defaultValue={invoice?.poNumber} />
-          </div>
-          <div>
-            <label className="label">Vehicle no.</label>
-            <input className="field" name="vehicleNo" defaultValue={invoice?.vehicleNo} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="label">Date</label>
+              <input className="field" type="date" name="date" defaultValue={invoice?.date ?? todayISO()} required />
+            </div>
+            <div>
+              <label className="label">Due date</label>
+              <input className="field" type="date" name="dueDate" defaultValue={invoice?.dueDate} />
+            </div>
           </div>
         </div>
       </section>
 
       <section className="card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
+        <div className="border-b border-line px-4 py-3 sm:px-5">
           <h2 className="font-display text-xl">Products</h2>
-          <button
-            className="btn-ghost"
-            type="button"
-            onClick={() => setLines((current) => [...current, { name: "", unit: "KG", quantity: 1, rate: 0 }])}
-          >
-            <Plus size={16} />
-            Line
-          </button>
         </div>
-        <div className="space-y-4 p-4 sm:p-5">
-          {lines.map((line, index) => (
-            <div key={index} className="rounded-xl border border-line bg-white p-3">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Item {index + 1}</p>
-                <div className="flex gap-2">
-                  <button className="btn-ghost py-1.5 text-xs" type="button" onClick={() => setShowProduct(index)}>
-                    New product
-                  </button>
-                  {lines.length > 1 ? (
+        {lines.length === 0 ? (
+          <div className="px-4 py-10 text-center sm:px-5">
+            <p className="text-sm text-muted">No products on this invoice yet.</p>
+            <button className="btn-primary mt-4" type="button" onClick={addLine}>
+              <Plus size={16} />
+              Add product
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4 p-4 sm:p-5">
+            {lines.map((line, index) => (
+              <div key={index} className="rounded-xl border border-line bg-white p-3">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">Item {index + 1}</p>
+                  <div className="flex gap-2">
+                    <button className="btn-ghost py-1.5 text-xs" type="button" onClick={() => setShowProduct(index)}>
+                      New product
+                    </button>
                     <button
                       className="btn-ghost py-1.5 text-bad"
                       type="button"
-                      onClick={() => setLines((current) => current.filter((_, i) => i !== index))}
+                      onClick={() => removeLine(index)}
+                      aria-label={`Remove item ${index + 1}`}
                     >
                       <Trash2 size={14} />
                     </button>
-                  ) : null}
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
-                <div className="lg:col-span-2">
-                  <label className="label">Product</label>
-                  <select
-                    className="field"
-                    value={line.productId ?? ""}
-                    onChange={(e) => pickProduct(index, e.target.value)}
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Product</label>
+                    <select
+                      className="field"
+                      value={line.productId ?? ""}
+                      onChange={(e) => pickProduct(index, e.target.value)}
+                    >
+                      <option value="">Type or select</option>
+                      {productList.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label">Qty</label>
+                      <input
+                        className="field"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={line.quantity}
+                        onChange={(e) => updateLine(index, { quantity: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Unit</label>
+                      <input
+                        className="field"
+                        value={line.unit}
+                        onChange={(e) => updateLine(index, { unit: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Rate</label>
+                      <input
+                        className="field"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={line.rate}
+                        onChange={(e) => updateLine(index, { rate: Number(e.target.value) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Amount</label>
+                      <p className="field bg-cream">{formatPKR(line.quantity * line.rate)}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <button
+                    className="group relative btn-ghost px-2"
+                    type="button"
+                    onClick={addLine}
+                    title="Add another product"
+                    aria-label="Add another product"
                   >
-                    <option value="">Type or select</option>
-                    {productList.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="lg:col-span-2">
-                  <label className="label">Description</label>
-                  <input
-                    className="field"
-                    value={line.name}
-                    onChange={(e) => updateLine(index, { name: e.target.value, productId: undefined })}
-                    placeholder="Chemical / item name"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="label">Qty</label>
-                  <input
-                    className="field"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.quantity}
-                    onChange={(e) => updateLine(index, { quantity: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="label">Unit</label>
-                  <input
-                    className="field"
-                    value={line.unit}
-                    onChange={(e) => updateLine(index, { unit: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="label">Rate</label>
-                  <input
-                    className="field"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={line.rate}
-                    onChange={(e) => updateLine(index, { rate: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="label">Amount</label>
-                  <p className="field bg-cream">{formatPKR(line.quantity * line.rate)}</p>
+                    <Plus size={18} />
+                    <span className="pointer-events-none absolute bottom-full right-0 mb-1 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-cream group-hover:block group-focus-visible:block">
+                      Add another product
+                    </span>
+                  </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="card p-4 sm:p-5">
+        {/* <div className="card p-4 sm:p-5">
           <label className="label">Notes on invoice</label>
           <textarea className="field min-h-28" name="notes" defaultValue={invoice?.notes} />
-        </div>
+        </div> */}
         <div className="card space-y-3 p-4 sm:p-5">
           <div>
             <label className="label">Discount (PKR)</label>
@@ -350,24 +359,35 @@ export function InvoiceForm({
       </div>
     </form>
       {showClient ? (
-        <Modal title="New client" onClose={() => setShowClient(false)}>
+        <Modal
+          title="New client"
+          onClose={() => {
+            setShowClient(false)
+            setShowClientMore(false)
+          }}
+        >
           <form action={addClient} className="space-y-3">
             <div>
               <label className="label">Name</label>
               <input className="field" name="name" required placeholder="TurkPlast" />
             </div>
             <div>
-              <label className="label">Invoice prefix</label>
-              <input className="field" name="prefix" required placeholder="Turk" />
-              <p className="mt-1 text-xs text-muted">Used for client invoice numbers, e.g. Turk1</p>
-            </div>
-            <div>
               <label className="label">Phone</label>
               <input className="field" name="phone" />
             </div>
-            <div>
+            <div className={showClientMore ? "block" : "hidden md:block"}>
               <label className="label">Address</label>
               <input className="field" name="address" />
+            </div>
+            <div className="md:hidden">
+              <button
+                className="btn-ghost w-full justify-center"
+                type="button"
+                onClick={() => setShowClientMore((value) => !value)}
+              >
+                {showClientMore ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {showClientMore ? "Less fields" : "More fields"}
+              </button>
             </div>
             <SubmitButton className="btn-primary w-full" pendingLabel="Adding…">
               Add client

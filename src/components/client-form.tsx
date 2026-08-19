@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { createClient, deleteClient, updateClient } from "@/app/actions/clients"
 import { ConfirmDeleteButton } from "@/components/confirm-dialog"
 import { Spinner } from "@/components/ui"
+import { notifyDataChanged } from "@/lib/client-data"
 
 type ClientValues = {
   id?: string
@@ -27,6 +29,7 @@ export function ClientForm({
 }) {
   const router = useRouter()
   const [error, setError] = useState("")
+  const [more, setMore] = useState(false)
   const [pending, startTransition] = useTransition()
 
   function submit(formData: FormData) {
@@ -36,6 +39,7 @@ export function ClientForm({
       if (!result.ok) setError(result.error || "Could not save client.")
       else {
         router.refresh()
+        notifyDataChanged()
         onDone?.()
       }
     })
@@ -48,10 +52,6 @@ export function ClientForm({
         <div>
           <label className="label">Name</label>
           <input className="field" name="name" required defaultValue={client?.name} placeholder="TurkPlast" />
-        </div>
-        <div>
-          <label className="label">Invoice prefix</label>
-          <input className="field" name="prefix" required defaultValue={client?.prefix} placeholder="Turk" />
         </div>
         <div>
           <label className="label">Phone</label>
@@ -69,14 +69,22 @@ export function ClientForm({
           <label className="label">NTN</label>
           <input className="field" name="ntn" defaultValue={client?.ntn} />
         </div>
-        <div className="sm:col-span-2">
-          <label className="label">Address</label>
-          <input className="field" name="address" defaultValue={client?.address} />
+        <div className={more ? "contents" : "hidden md:contents"}>
+          <div className="sm:col-span-2">
+            <label className="label">Address</label>
+            <input className="field" name="address" defaultValue={client?.address} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">Notes</label>
+            <textarea className="field min-h-20" name="notes" defaultValue={client?.notes} />
+          </div>
         </div>
-        <div className="sm:col-span-2">
-          <label className="label">Notes</label>
-          <textarea className="field min-h-20" name="notes" defaultValue={client?.notes} />
-        </div>
+      </div>
+      <div className="md:hidden">
+        <button className="btn-ghost" type="button" onClick={() => setMore((value) => !value)}>
+          {more ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {more ? "Less fields" : "More fields"}
+        </button>
       </div>
       {error ? <p className="text-sm text-bad">{error}</p> : null}
       <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>

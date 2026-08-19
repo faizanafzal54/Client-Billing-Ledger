@@ -8,7 +8,7 @@ import { EmptyState, StatusBadge } from "@/components/ui"
 import type { InvoiceListFilters } from "@/lib/invoice-list"
 import { invoiceListHref } from "@/lib/invoice-list"
 import { formatPKR } from "@/lib/money"
-import { cn, displayInvoiceNo, formatDate } from "@/lib/utils"
+import { displayInvoiceNo, formatDate, cn } from "@/lib/utils"
 
 export type InvoiceRow = {
   id: string
@@ -62,7 +62,7 @@ export function InvoiceList({
   }, [filters.clientId, filters.from, filters.query, filters.status, filters.to, query, router])
 
   const active = Boolean(filters.query || filters.clientId || filters.status || filters.from || filters.to)
-  const extraActive = Boolean(filters.status || filters.from || filters.to)
+  const extraActive = Boolean(filters.clientId || filters.from || filters.to)
   const fromItem = total === 0 ? 0 : (filters.page - 1) * pageSize + 1
   const toItem = Math.min(filters.page * pageSize, total)
 
@@ -72,53 +72,49 @@ export function InvoiceList({
 
   return (
     <div>
-      <div className="card mb-4 p-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <div className="md:col-span-2 xl:col-span-1">
-            <label className="label" htmlFor="invoice-search">
-              Search
-            </label>
-            <input
-              id="invoice-search"
-              className="field"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="INV00001, Turk1, DuraFlow"
-            />
-          </div>
-          <div>
-            <label className="label" htmlFor="invoice-client">
-              Client
-            </label>
-            <select
-              id="invoice-client"
-              className="field"
-              value={filters.clientId}
-              onChange={(event) => setFilter({ clientId: event.target.value })}
-            >
-              <option value="">All clients</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
+      <div className="card mb-4 pt-2 p-4">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="flex items-end gap-2 md:col-span-2 xl:col-span-1">
+            <div className="min-w-0 flex-1">
+              <label className="label" htmlFor="invoice-search">
+                Search
+              </label>
+              <input
+                id="invoice-search"
+                className="field"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="INV00001, Turk1, DuraFlow"
+              />
+            </div>
+            <div className="md:hidden">
+              <button
+                className="btn-ghost mb-px shrink-0"
+                type="button"
+                onClick={() => setMore((value) => !value)}
+              >
+                {more ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                {more ? "Less" : extraActive ? "Filters (on)" : "More filters"}
+              </button>
+            </div>
           </div>
           <div className={more ? "contents" : "hidden md:contents"}>
             <div>
-              <label className="label" htmlFor="invoice-status">
-                Status
+              <label className="label" htmlFor="invoice-client">
+                Client
               </label>
               <select
-                id="invoice-status"
+                id="invoice-client"
                 className="field"
-                value={filters.status}
-                onChange={(event) => setFilter({ status: event.target.value })}
+                value={filters.clientId}
+                onChange={(event) => setFilter({ clientId: event.target.value })}
               >
-                <option value="">All statuses</option>
-                <option value="unpaid">Unpaid</option>
-                <option value="partial">Partial</option>
-                <option value="paid">Paid</option>
+                <option value="">All clients</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -147,42 +143,45 @@ export function InvoiceList({
             </div>
           </div>
         </div>
-        <div
-          className={cn(
-            "mt-3 flex items-center justify-between gap-3",
-            !active && "md:hidden",
-          )}
-        >
+        <div className="mt-3 flex flex-wrap gap-2">
           <button
-            className="btn-ghost md:hidden"
+            className={cn("btn-ghost py-1.5", !filters.status && "border-ink bg-cream")}
             type="button"
-            onClick={() => setMore((value) => !value)}
+            onClick={() => setFilter({ status: "" })}
           >
-            {more ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            {more ? "Less filters" : extraActive ? "More filters (on)" : "More filters"}
+            All
           </button>
-          {active ? (
-            <>
-              <p className="hidden text-xs text-muted md:block">
-                {total} matching {total === 1 ? "invoice" : "invoices"}
-              </p>
-              <button
-                className="btn-ghost ml-auto"
-                type="button"
-                onClick={() => {
-                  setQuery("")
-                  router.replace("/invoices")
-                }}
-              >
-                Clear
-              </button>
-            </>
-          ) : null}
+          <button
+            className={cn("btn-ghost py-1.5", filters.status === "unpaid" && "border-ink bg-cream")}
+            type="button"
+            onClick={() => setFilter({ status: filters.status === "unpaid" ? "" : "unpaid" })}
+          >
+            Unpaid
+          </button>
+          <button
+            className={cn("btn-ghost py-1.5", filters.status === "paid" && "border-ink bg-cream")}
+            type="button"
+            onClick={() => setFilter({ status: filters.status === "paid" ? "" : "paid" })}
+          >
+            Paid
+          </button>
         </div>
         {active ? (
-          <p className="mt-2 text-xs text-muted md:hidden">
-            {total} matching {total === 1 ? "invoice" : "invoices"}
-          </p>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-muted">
+              {total} matching {total === 1 ? "invoice" : "invoices"}
+            </p>
+            <button
+              className="btn-ghost"
+              type="button"
+              onClick={() => {
+                setQuery("")
+                router.replace("/invoices")
+              }}
+            >
+              Clear
+            </button>
+          </div>
         ) : null}
       </div>
 
@@ -205,9 +204,9 @@ export function InvoiceList({
       ) : (
         <>
           <div className="card overflow-hidden">
-            <div className="hidden grid-cols-[1.1fr_1fr_0.8fr_0.7fr_0.6fr] gap-3 border-b border-line bg-cream px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
-              <span>Numbers</span>
+            <div className="hidden grid-cols-[1.2fr_1.1fr_0.8fr_0.7fr_0.6fr] gap-3 border-b border-line bg-cream px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
               <span>Client</span>
+              <span>Numbers</span>
               <span>Date</span>
               <span>Total</span>
               <span>Status</span>
@@ -217,18 +216,24 @@ export function InvoiceList({
                 <li key={invoice.id} className="border-b border-line last:border-0">
                   <Link
                     href={`/invoices/${invoice.id}`}
-                    className="grid gap-1 px-4 py-3 md:grid-cols-[1.1fr_1fr_0.8fr_0.7fr_0.6fr] md:items-center md:gap-3"
+                    className="flex items-center justify-between gap-3 px-4 py-3 md:grid md:grid-cols-[1.2fr_1.1fr_0.8fr_0.7fr_0.6fr] md:items-center"
                   >
-                    <div>
-                      <p className="font-medium">
-                        {displayInvoiceNo(invoice.globalNumber)} · {invoice.clientNumber}
+                    <div className="min-w-0">
+                      <p className="font-bold text-brass-dark">{invoice.clientName}</p>
+                      <p className="text-xs text-muted md:hidden">
+                        {displayInvoiceNo(invoice.globalNumber)} · {invoice.clientNumber} · {formatDate(invoice.date)}
                       </p>
-                      <p className="text-xs text-muted md:hidden">{invoice.clientName}</p>
                     </div>
-                    <p className="hidden md:block">{invoice.clientName}</p>
-                    <p className="text-sm text-muted">{formatDate(invoice.date)}</p>
-                    <p className="text-sm">{formatPKR(invoice.total)}</p>
-                    <StatusBadge status={invoice.status} />
+                    <p className="hidden md:block">
+                      {displayInvoiceNo(invoice.globalNumber)} · {invoice.clientNumber}
+                    </p>
+                    <p className="hidden text-sm text-muted md:block">{formatDate(invoice.date)}</p>
+                    <div className="shrink-0 text-right md:contents">
+                      <p className="text-sm md:text-left">{formatPKR(invoice.total)}</p>
+                      <div className="mt-1 flex justify-end md:mt-0 md:block">
+                        <StatusBadge status={invoice.status} />
+                      </div>
+                    </div>
                   </Link>
                 </li>
               ))}

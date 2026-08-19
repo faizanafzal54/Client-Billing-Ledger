@@ -192,4 +192,13 @@ button {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+
+  .invoice-fit-frame {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .invoice-fit-scale {
+    transform: none !important;
+  }
 }

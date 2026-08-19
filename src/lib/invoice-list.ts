@@ -35,7 +35,9 @@ export function parseInvoiceListParams(
 export function invoiceListWhere(filters: InvoiceListFilters): Prisma.InvoiceWhereInput {
   const where: Prisma.InvoiceWhereInput = {}
   if (filters.clientId) where.clientId = filters.clientId
-  if (filters.status) where.status = filters.status
+  if (filters.status === "paid") where.status = "paid"
+  if (filters.status === "unpaid") where.status = { in: ["unpaid", "partial"] }
+  if (filters.status === "partial") where.status = "partial"
   if (filters.from || filters.to) {
     where.date = {}
     if (filters.from) where.date.gte = new Date(`${filters.from}T00:00:00.000`)

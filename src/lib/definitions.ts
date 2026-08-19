@@ -16,4 +16,5 @@ export type ActionResult = {
   ok: boolean
   error?: string
   id?: string
+  prefix?: string
 }
