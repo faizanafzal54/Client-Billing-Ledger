@@ -3,6 +3,7 @@
 import { useActionState } from "react"
 import { login } from "@/app/actions/auth"
 import { PasswordField } from "@/components/password-field"
+import { Spinner } from "@/components/ui"
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(login, undefined)
@@ -37,7 +38,8 @@ export function LoginForm() {
       {state?.error ? (
         <p className="rounded-lg bg-bad/10 px-3 py-2 text-sm text-bad">{state.error}</p>
       ) : null}
-      <button className="btn-primary w-full" disabled={pending} type="submit">
+      <button className="btn-primary w-full" disabled={pending} type="submit" aria-busy={pending}>
+        {pending ? <Spinner /> : null}
         {pending ? "Signing in…" : "Sign in"}
       </button>
     </form>

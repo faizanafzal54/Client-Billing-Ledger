@@ -4,6 +4,8 @@ import { useState, useTransition } from "react"
 import { changePassword, updateCompany } from "@/app/actions/settings"
 import { logout } from "@/app/actions/auth"
 import { PasswordField } from "@/components/password-field"
+import { SubmitButton } from "@/components/submit-button"
+import { Spinner } from "@/components/ui"
 
 type CompanyValues = {
   name: string
@@ -25,7 +27,8 @@ export function SettingsForms({ company }: { company: CompanyValues }) {
   const [companyMessage, setCompanyMessage] = useState("")
   const [passwordMessage, setPasswordMessage] = useState("")
   const [passwordError, setPasswordError] = useState("")
-  const [pending, startTransition] = useTransition()
+  const [companyPending, startCompany] = useTransition()
+  const [passwordPending, startPassword] = useTransition()
 
   return (
     <div className="space-y-6">
@@ -35,7 +38,7 @@ export function SettingsForms({ company }: { company: CompanyValues }) {
           className="grid gap-3 sm:grid-cols-2"
           action={(formData) => {
             setCompanyMessage("")
-            startTransition(async () => {
+            startCompany(async () => {
               await updateCompany(formData)
               setCompanyMessage("Company details saved.")
             })
@@ -95,8 +98,9 @@ export function SettingsForms({ company }: { company: CompanyValues }) {
           </div>
           {companyMessage ? <p className="text-sm text-good sm:col-span-2">{companyMessage}</p> : null}
           <div className="sm:col-span-2">
-            <button className="btn-primary" disabled={pending} type="submit">
-              Save company
+            <button className="btn-primary" disabled={companyPending} type="submit" aria-busy={companyPending}>
+              {companyPending ? <Spinner /> : null}
+              {companyPending ? "Saving…" : "Save company"}
             </button>
           </div>
         </form>
@@ -109,7 +113,7 @@ export function SettingsForms({ company }: { company: CompanyValues }) {
           action={(formData) => {
             setPasswordError("")
             setPasswordMessage("")
-            startTransition(async () => {
+            startPassword(async () => {
               const result = await changePassword(formData)
               if (!result.ok) setPasswordError(result.error || "Could not change password.")
               else setPasswordMessage("Password updated.")
@@ -141,16 +145,17 @@ export function SettingsForms({ company }: { company: CompanyValues }) {
           </div>
           {passwordError ? <p className="text-sm text-bad">{passwordError}</p> : null}
           {passwordMessage ? <p className="text-sm text-good">{passwordMessage}</p> : null}
-          <button className="btn-primary" disabled={pending} type="submit">
-            Update password
+          <button className="btn-primary" disabled={passwordPending} type="submit" aria-busy={passwordPending}>
+            {passwordPending ? <Spinner /> : null}
+            {passwordPending ? "Updating…" : "Update password"}
           </button>
         </form>
       </section>
 
       <form action={logout}>
-        <button className="btn-ghost" type="submit">
+        <SubmitButton className="btn-ghost" pendingLabel="Signing out…">
           Sign out
-        </button>
+        </SubmitButton>
       </form>
     </div>
   )

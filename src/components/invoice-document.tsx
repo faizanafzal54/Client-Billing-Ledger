@@ -45,9 +45,41 @@ type CompanyDoc = {
   invoiceNotes: string
 }
 
+const CYAN = "#00aeef"
+const CORNER_OUTER = "#1074bc"
+const INK = "#123047"
+const MUTED = "#5a7184"
+const LINE = "#c5e8f6"
+const ROW_ALT = "#f3fbfe"
+
+function leftoverPath(radius: number, box = 200) {
+  const t = Math.sqrt(radius * radius - box * box)
+  return `M${box} ${t}V${box}H${t}A${radius} ${radius} 0 0 0 ${box} ${t}Z`
+}
+
+function leftoverEllipse(rx: number, ry: number, box = 200) {
+  const y = ry * Math.sqrt(1 - (box * box) / (rx * rx))
+  const x = rx * Math.sqrt(1 - (box * box) / (ry * ry))
+  return `M${box} ${y}V${box}H${x}A${rx} ${ry} 0 0 0 ${box} ${y}Z`
+}
+
+function CornerAccent({ corner }: { corner: "top-left" | "bottom-right" }) {
+  const isTop = corner === "top-left"
+  return (
+    <svg
+      className={`pointer-events-none absolute ${isTop ? "left-0 top-0 -scale-100" : "bottom-0 right-0"} h-[196px] w-[196px]`}
+      viewBox="0 0 200 200"
+      aria-hidden
+    >
+      <path fill={CYAN} d={leftoverEllipse(200, 210)} />
+      <path fill="#fff" d={leftoverPath(210)} />
+      <path fill={CORNER_OUTER} d={leftoverPath(216)} />
+    </svg>
+  )
+}
+
 export function InvoiceDocument({
   invoice,
-  company,
   paid = 0,
 }: {
   invoice: InvoiceDoc
@@ -58,124 +90,132 @@ export function InvoiceDocument({
   const invoiceNo = displayInvoiceNo(invoice.globalNumber)
 
   return (
-    <article className="invoice-sheet print-sheet relative mx-auto w-[800px] max-w-[800px] shrink-0 overflow-hidden bg-white text-[#111] shadow-sm print:w-full print:max-w-none print:shadow-none">
-      <svg className="pointer-events-none absolute -left-16 -top-24 h-64 w-64 text-[#2f6fed]" viewBox="0 0 200 200" aria-hidden>
-        <path fill="currentColor" d="M0 40c40 0 70 18 90 40 22 24 38 56 70 56V0H0v40Z" />
-        <path fill="currentColor" opacity="0.85" d="M0 0c55 8 90 38 110 70C132 104 150 130 200 136V0H0Z" />
-      </svg>
-      <svg className="pointer-events-none absolute -bottom-20 -right-16 h-64 w-64 text-[#2f6fed]" viewBox="0 0 200 200" aria-hidden>
-        <path fill="currentColor" d="M200 160c-40 0-70-18-90-40-22-24-38-56-70-56V200h160v-40Z" />
-        <path fill="currentColor" opacity="0.85" d="M200 200c-55-8-90-38-110-70C68 96 50 70 0 64V200h200Z" />
-      </svg>
+    <article
+      className="invoice-sheet print-sheet relative mx-auto flex min-h-[297mm] w-[210mm] max-w-[210mm] shrink-0 flex-col overflow-hidden bg-white shadow-sm print:shadow-none"
+      style={{
+        color: INK,
+        fontFamily: "var(--font-manrope), ui-sans-serif, system-ui, sans-serif",
+      }}
+    >
+      <CornerAccent corner="top-left" />
+      <CornerAccent corner="bottom-right" />
 
-      <div className="relative z-10 px-8 pb-16 pt-10 sm:px-12">
-        <header className="flex items-start justify-between gap-8">
-          <div className="flex min-w-0 items-start gap-4">
+      <div className="relative z-10 flex min-h-[297mm] flex-1 flex-col px-10 pb-10 pt-8">
+        <header className="flex w-full items-start justify-between gap-10 pt-5">
+          <div className="shrink-0">
             <img
               src="/aac-logo.png"
               alt="Asghar Ali Chemicals"
-              className="h-28 w-auto object-contain sm:h-32"
+              className="h-[120px] w-auto object-contain object-left"
             />
-            <div className="pt-1 text-[13px] leading-6">
-              <p className="text-lg font-extrabold tracking-wide">{company.name.toUpperCase()}</p>
-              {company.city ? <p>{company.city.toUpperCase()}</p> : null}
-              {company.address ? <p>{company.address.toUpperCase()}</p> : null}
-              {company.phone ? <p>{company.phone}</p> : null}
-              {company.email ? <p>{company.email}</p> : null}
-            </div>
           </div>
-          <div className="min-w-[220px] shrink-0 text-right">
-            <p className="text-lg font-extrabold uppercase">{invoice.client.name}</p>
-            {invoice.client.address ? <p className="text-sm">{invoice.client.address}</p> : null}
-            {invoice.client.city ? <p className="text-sm">{invoice.client.city}</p> : null}
-            {invoice.client.phone ? <p className="text-sm">{invoice.client.phone}</p> : null}
-            <dl className="mt-4 space-y-1 text-sm">
-              <div className="flex justify-end gap-3">
-                <dt className="font-semibold">Invoice #:</dt>
-                <dd>{invoiceNo}</dd>
-              </div>
-              <div className="flex justify-end gap-3">
-                <dt className="font-semibold">Client #:</dt>
-                <dd>{invoice.clientNumber}</dd>
-              </div>
-              <div className="flex justify-end gap-3">
-                <dt className="font-semibold">Date:</dt>
-                <dd>{formatInvoiceDate(invoice.date)}</dd>
-              </div>
+
+          <div className="ml-auto w-[260px] shrink-0">
+            <p
+              className="text-[26px] leading-tight"
+              style={{ fontFamily: "var(--font-fraunces), Georgia, serif", fontWeight: 650 }}
+            >
+              {invoice.client.name}
+            </p>
+
+            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[12.5px] tabular-nums">
+              <dt style={{ color: MUTED }}>Invoice #</dt>
+              <dd className="text-right font-semibold">{invoiceNo}</dd>
+              <dt style={{ color: MUTED }}>Client #</dt>
+              <dd className="text-right font-semibold">{invoice.clientNumber}</dd>
+              <dt style={{ color: MUTED }}>Date</dt>
+              <dd className="text-right font-semibold">{formatInvoiceDate(invoice.date)}</dd>
               {invoice.dueDate ? (
-                <div className="flex justify-end gap-3">
-                  <dt className="font-semibold">Due Date:</dt>
-                  <dd>{formatInvoiceDate(invoice.dueDate)}</dd>
-                </div>
-              ) : null}
-              {invoice.poNumber ? (
-                <div className="flex justify-end gap-3">
-                  <dt className="font-semibold">P.O. #:</dt>
-                  <dd>{invoice.poNumber}</dd>
-                </div>
+                <>
+                  <dt style={{ color: MUTED }}>Due date</dt>
+                  <dd className="text-right font-semibold">{formatInvoiceDate(invoice.dueDate)}</dd>
+                </>
               ) : null}
             </dl>
           </div>
         </header>
 
-        <table className="mt-10 w-full border-collapse text-sm">
+        <div className="mt-6 h-px w-full" style={{ background: CYAN }} />
+
+        <table className="mt-6 w-full border-collapse text-[13px] tabular-nums">
           <thead>
-            <tr className="bg-[#2f6fed] text-white">
-              <th className="px-4 py-2.5 text-left font-semibold">Description</th>
-              <th className="px-4 py-2.5 text-center font-semibold">QTY</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Price</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Amount</th>
+            <tr className="text-white" style={{ background: CYAN }}>
+              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+                Description
+              </th>
+              <th className="w-[72px] px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em]">
+                Qty
+              </th>
+              <th className="w-[110px] px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em]">
+                Price
+              </th>
+              <th className="w-[120px] px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em]">
+                Amount
+              </th>
             </tr>
           </thead>
           <tbody>
             {invoice.items.map((item, index) => (
-              <tr key={`${item.description}-${index}`} className="border-b border-[#dbe4f0]">
-                <td className="px-4 py-3">
-                  <p className="font-medium uppercase">{item.description}</p>
-                  {item.unit ? <p className="text-xs text-[#667085]">{item.unit}</p> : null}
+              <tr
+                key={`${item.description}-${index}`}
+                style={{ background: index % 2 === 1 ? ROW_ALT : "#ffffff" }}
+              >
+                <td className="px-3 py-3 font-medium" style={{ borderBottom: `1px solid ${LINE}` }}>
+                  {item.description}
                 </td>
-                <td className="px-4 py-3 text-center">{item.quantity}</td>
-                <td className="px-4 py-3 text-right">{formatRs(item.rate)}</td>
-                <td className="px-4 py-3 text-right">{formatRs(item.amount)}</td>
+                <td className="px-3 py-3 text-center" style={{ borderBottom: `1px solid ${LINE}` }}>
+                  {item.quantity}
+                </td>
+                <td className="px-3 py-3 text-right" style={{ borderBottom: `1px solid ${LINE}` }}>
+                  {formatRs(item.rate)}
+                </td>
+                <td className="px-3 py-3 text-right" style={{ borderBottom: `1px solid ${LINE}` }}>
+                  {formatRs(item.amount)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="mt-6 flex justify-end">
-          <div className="w-full max-w-xs text-sm">
-            <div className="flex justify-between py-1.5">
-              <span>Subtotal</span>
+        <div className="mt-4 flex justify-end">
+          <div className="w-[250px] text-[13px] tabular-nums">
+            <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
+              <span style={{ color: MUTED }}>Subtotal</span>
               <span>{formatRs(invoice.subtotal)}</span>
             </div>
             {invoice.discount > 0 ? (
-              <div className="flex justify-between py-1.5">
-                <span>Discount</span>
+              <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <span style={{ color: MUTED }}>Discount</span>
                 <span>{formatRs(invoice.discount)}</span>
               </div>
             ) : null}
             {invoice.taxPercent > 0 ? (
-              <div className="flex justify-between py-1.5">
-                <span>Sales tax {invoice.taxPercent}%</span>
+              <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <span style={{ color: MUTED }}>Sales tax {invoice.taxPercent}%</span>
                 <span>{formatRs(invoice.taxAmount)}</span>
               </div>
             ) : null}
-            <div className="flex justify-between py-1.5">
-              <span>Total</span>
-              <span>{formatRs(invoice.total)}</span>
+            <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
+              <span style={{ color: MUTED }}>Total</span>
+              <span className="font-semibold">{formatRs(invoice.total)}</span>
             </div>
-            <div className="flex justify-between py-1.5">
-              <span>Paid</span>
+            <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
+              <span style={{ color: MUTED }}>Paid</span>
               <span>{formatRs(paid)}</span>
             </div>
-            <div className="mt-1 flex justify-between bg-[#2f6fed] px-3 py-2.5 font-bold text-white">
-              <span>Balance Due</span>
+            <div
+              className="mt-1 flex justify-between px-3 py-2.5 font-semibold text-white"
+              style={{ background: CYAN }}
+            >
+              <span>Balance due</span>
               <span>{formatRs(balanceDue)}</span>
             </div>
           </div>
         </div>
 
-        <p className="mt-10 text-sm">{invoice.notes || company.invoiceNotes || "Thanks for your business."}</p>
+        <p className="mt-auto pt-12 text-[13px]" style={{ color: MUTED }}>
+          {invoice.notes || "Thanks for your business."}
+        </p>
       </div>
     </article>
   )

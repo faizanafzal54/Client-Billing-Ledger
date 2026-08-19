@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
 import { recordPayment, updatePayment } from "@/app/actions/payments"
+import { Spinner } from "@/components/ui"
 import { formatPKR } from "@/lib/money"
 import { formatDate, todayISO } from "@/lib/utils"
 
@@ -168,7 +169,8 @@ export function PaymentForm({
       </div>
       {error ? <p className="text-sm text-bad">{error}</p> : null}
       {message ? <p className="text-sm text-good">{message}</p> : null}
-      <button className="btn-primary" disabled={pending} type="submit">
+      <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>
+        {pending ? <Spinner /> : null}
         {pending ? "Saving…" : editing ? "Save payment" : "Record payment"}
       </button>
     </form>

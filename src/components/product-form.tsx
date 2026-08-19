@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { createProduct, deleteProduct, updateProduct } from "@/app/actions/products"
 import { ConfirmDeleteButton } from "@/components/confirm-dialog"
+import { Spinner } from "@/components/ui"
 
 type ProductValues = {
   id?: string
@@ -65,7 +66,8 @@ export function ProductForm({
         </div>
       </div>
       {error ? <p className="text-sm text-bad">{error}</p> : null}
-      <button className="btn-primary" disabled={pending} type="submit">
+      <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>
+        {pending ? <Spinner /> : null}
         {pending ? "Saving…" : product?.id ? "Save product" : "Create product"}
       </button>
     </form>

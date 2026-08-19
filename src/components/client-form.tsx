@@ -4,6 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { createClient, deleteClient, updateClient } from "@/app/actions/clients"
 import { ConfirmDeleteButton } from "@/components/confirm-dialog"
+import { Spinner } from "@/components/ui"
 
 type ClientValues = {
   id?: string
@@ -78,7 +79,8 @@ export function ClientForm({
         </div>
       </div>
       {error ? <p className="text-sm text-bad">{error}</p> : null}
-      <button className="btn-primary" disabled={pending} type="submit">
+      <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>
+        {pending ? <Spinner /> : null}
         {pending ? "Saving…" : client?.id ? "Save client" : "Create client"}
       </button>
     </form>

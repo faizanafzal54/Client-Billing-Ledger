@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Download, Pencil } from "lucide-react"
 import { EditPaymentDialog, type PaymentValues } from "@/components/payment-form"
 import { LedgerSheet, type LedgerCompany, type LedgerMonthGroup, type LedgerRow } from "@/components/ledger-sheet"
+import { Spinner } from "@/components/ui"
 import { formatPKR } from "@/lib/money"
 import { fileSlug, formatDate, monthKey, monthLabel } from "@/lib/utils"
 
@@ -146,12 +147,12 @@ export function ClientLedger({
               ))}
             </select>
           </div>
-          <button className="btn-ghost" type="button" onClick={downloadPng} disabled={Boolean(exporting) || ledger.length === 0}>
-            <Download size={16} />
+          <button className="btn-ghost" type="button" onClick={downloadPng} disabled={Boolean(exporting) || ledger.length === 0} aria-busy={exporting === "png"}>
+            {exporting === "png" ? <Spinner /> : <Download size={16} />}
             {exporting === "png" ? "PNG…" : "PNG"}
           </button>
-          <button className="btn-ghost" type="button" onClick={downloadPdf} disabled={Boolean(exporting) || ledger.length === 0}>
-            <Download size={16} />
+          <button className="btn-ghost" type="button" onClick={downloadPdf} disabled={Boolean(exporting) || ledger.length === 0} aria-busy={exporting === "pdf"}>
+            {exporting === "pdf" ? <Spinner /> : <Download size={16} />}
             {exporting === "pdf" ? "PDF…" : "PDF"}
           </button>
         </div>

@@ -7,6 +7,8 @@ import { Plus, Trash2, X } from "lucide-react"
 import { createClient } from "@/app/actions/clients"
 import { createInvoice, updateInvoice } from "@/app/actions/invoices"
 import { createProduct } from "@/app/actions/products"
+import { SubmitButton } from "@/components/submit-button"
+import { Spinner } from "@/components/ui"
 import { todayISO } from "@/lib/utils"
 import { formatPKR } from "@/lib/money"
 
@@ -341,7 +343,8 @@ export function InvoiceForm({
       {error ? <p className="rounded-lg bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p> : null}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button className="btn-primary" disabled={pending} type="submit">
+        <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>
+          {pending ? <Spinner /> : null}
           {pending ? "Saving…" : invoice ? "Update invoice" : "Create invoice"}
         </button>
       </div>
@@ -366,9 +369,9 @@ export function InvoiceForm({
               <label className="label">Address</label>
               <input className="field" name="address" />
             </div>
-            <button className="btn-primary w-full" type="submit">
+            <SubmitButton className="btn-primary w-full" pendingLabel="Adding…">
               Add client
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       ) : null}
@@ -390,9 +393,9 @@ export function InvoiceForm({
                 <input className="field" type="number" name="defaultRate" min="0" step="0.01" defaultValue="0" />
               </div>
             </div>
-            <button className="btn-primary w-full" type="submit">
+            <SubmitButton className="btn-primary w-full" pendingLabel="Adding…">
               Add product
-            </button>
+            </SubmitButton>
           </form>
         </Modal>
       ) : null}

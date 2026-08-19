@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react"
 import { X } from "lucide-react"
 import type { ActionResult } from "@/lib/definitions"
+import { Spinner } from "@/components/ui"
 
 export function ConfirmDialog({
   open,
@@ -66,7 +67,8 @@ export function ConfirmDialog({
           <button className="btn-ghost" type="button" onClick={onCancel} disabled={pending}>
             Cancel
           </button>
-          <button className="btn-danger" type="button" onClick={onConfirm} disabled={pending}>
+          <button className="btn-danger" type="button" onClick={onConfirm} disabled={pending} aria-busy={pending}>
+            {pending ? <Spinner /> : null}
             {pending ? "Deleting…" : confirmLabel}
           </button>
         </div>

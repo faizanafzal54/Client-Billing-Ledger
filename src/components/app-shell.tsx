@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react"
 import { logout } from "@/app/actions/auth"
+import { SubmitButton } from "@/components/submit-button"
 import { cn } from "@/lib/utils"
 
 const nav = [
@@ -65,9 +66,12 @@ export function AppShell({
               Settings
             </Link>
             <form action={logout}>
-              <button className="btn-ghost border-white/15 bg-transparent text-cream hover:bg-white/10" type="submit">
+              <SubmitButton
+                className="btn-ghost border-white/15 bg-transparent text-cream hover:bg-white/10"
+                aria-label="Sign out"
+              >
                 <LogOut size={16} />
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>

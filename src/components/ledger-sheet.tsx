@@ -56,9 +56,6 @@ export function LedgerSheet({
         <p style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "0.04em" }}>
           {company.name.toUpperCase()}
         </p>
-        <p style={{ margin: "6px 0 0", fontSize: 13, color: "#6b645b" }}>
-          {[company.city, company.address, company.phone].filter(Boolean).join(" · ")}
-        </p>
         <p style={{ margin: "16px 0 0", fontSize: 18, fontWeight: 700 }}>Client Ledger</p>
         <p style={{ margin: "4px 0 0", fontSize: 14 }}>
           Client: <strong>{clientName}</strong>
