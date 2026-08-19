@@ -111,15 +111,15 @@ export function InvoiceDocument({
             />
           </div>
 
-          <div className="ml-auto w-[260px] shrink-0">
+          <div className="ml-auto w-[290px] shrink-0">
             <p
-              className="text-[28px] leading-tight"
+              className="text-[32px] leading-tight"
               style={{ fontFamily: "var(--font-fraunces), Georgia, serif", fontWeight: 700 }}
             >
               {invoice.client.name}
             </p>
 
-            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[14px] font-semibold tabular-nums">
+            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-[16px] font-semibold tabular-nums">
               <dt style={{ color: MUTED }}>Invoice #</dt>
               <dd className="text-right font-bold">{invoiceNo}</dd>
               <dt style={{ color: MUTED }}>Client #</dt>
@@ -138,19 +138,19 @@ export function InvoiceDocument({
 
         <div className="mt-6 h-px w-full" style={{ background: CYAN }} />
 
-        <table className="mt-6 w-full border-collapse text-[15px] font-semibold tabular-nums">
+        <table className="mt-6 w-full border-collapse text-[18px] font-semibold tabular-nums">
           <thead>
             <tr className="text-white" style={{ background: CYAN }}>
-              <th className="px-3 py-2.5 text-left text-[12.5px] font-bold uppercase tracking-[0.12em]">
+              <th className="px-3 py-3 text-left text-[14px] font-bold uppercase tracking-[0.12em]">
                 Description
               </th>
-              <th className="w-[72px] px-3 py-2.5 text-center text-[12.5px] font-bold uppercase tracking-[0.12em]">
+              <th className="w-[80px] px-3 py-3 text-center text-[14px] font-bold uppercase tracking-[0.12em]">
                 Qty
               </th>
-              <th className="w-[110px] px-3 py-2.5 text-right text-[12.5px] font-bold uppercase tracking-[0.12em]">
+              <th className="w-[120px] px-3 py-3 text-right text-[14px] font-bold uppercase tracking-[0.12em]">
                 Price
               </th>
-              <th className="w-[120px] px-3 py-2.5 text-right text-[12.5px] font-bold uppercase tracking-[0.12em]">
+              <th className="w-[130px] px-3 py-3 text-right text-[14px] font-bold uppercase tracking-[0.12em]">
                 Amount
               </th>
             </tr>
@@ -179,7 +179,7 @@ export function InvoiceDocument({
         </table>
 
         <div className="mt-4 flex justify-end">
-          <div className="w-[250px] text-[15px] font-semibold tabular-nums">
+          <div className="w-[280px] text-[18px] font-semibold tabular-nums">
             <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
               <span style={{ color: MUTED }}>Subtotal</span>
               <span className="font-bold">{formatRs(invoice.subtotal)}</span>
@@ -214,7 +214,7 @@ export function InvoiceDocument({
           </div>
         </div>
 
-        <p className="mt-auto pt-12 text-[14px] font-semibold" style={{ color: MUTED }}>
+        <p className="mt-auto pt-12 text-[16px] font-semibold" style={{ color: MUTED }}>
           {invoice.notes || "Thanks for your business."}
         </p>
       </div>
