@@ -48,7 +48,7 @@ type CompanyDoc = {
 const CYAN = "#00aeef"
 const CORNER_OUTER = "#1074bc"
 const INK = "#123047"
-const MUTED = "#5a7184"
+const MUTED = "#3d5668"
 const LINE = "#c5e8f6"
 const ROW_ALT = "#f3fbfe"
 
@@ -95,6 +95,7 @@ export function InvoiceDocument({
       style={{
         color: INK,
         fontFamily: "var(--font-manrope), ui-sans-serif, system-ui, sans-serif",
+        fontWeight: 600,
       }}
     >
       <CornerAccent corner="top-left" />
@@ -112,23 +113,23 @@ export function InvoiceDocument({
 
           <div className="ml-auto w-[260px] shrink-0">
             <p
-              className="text-[26px] leading-tight"
-              style={{ fontFamily: "var(--font-fraunces), Georgia, serif", fontWeight: 650 }}
+              className="text-[28px] leading-tight"
+              style={{ fontFamily: "var(--font-fraunces), Georgia, serif", fontWeight: 700 }}
             >
               {invoice.client.name}
             </p>
 
-            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[12.5px] tabular-nums">
+            <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-[14px] font-semibold tabular-nums">
               <dt style={{ color: MUTED }}>Invoice #</dt>
-              <dd className="text-right font-semibold">{invoiceNo}</dd>
+              <dd className="text-right font-bold">{invoiceNo}</dd>
               <dt style={{ color: MUTED }}>Client #</dt>
-              <dd className="text-right font-semibold">{invoice.clientNumber}</dd>
+              <dd className="text-right font-bold">{invoice.clientNumber}</dd>
               <dt style={{ color: MUTED }}>Date</dt>
-              <dd className="text-right font-semibold">{formatInvoiceDate(invoice.date)}</dd>
+              <dd className="text-right font-bold">{formatInvoiceDate(invoice.date)}</dd>
               {invoice.dueDate ? (
                 <>
                   <dt style={{ color: MUTED }}>Due date</dt>
-                  <dd className="text-right font-semibold">{formatInvoiceDate(invoice.dueDate)}</dd>
+                  <dd className="text-right font-bold">{formatInvoiceDate(invoice.dueDate)}</dd>
                 </>
               ) : null}
             </dl>
@@ -137,19 +138,19 @@ export function InvoiceDocument({
 
         <div className="mt-6 h-px w-full" style={{ background: CYAN }} />
 
-        <table className="mt-6 w-full border-collapse text-[13px] tabular-nums">
+        <table className="mt-6 w-full border-collapse text-[15px] font-semibold tabular-nums">
           <thead>
             <tr className="text-white" style={{ background: CYAN }}>
-              <th className="px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.12em]">
+              <th className="px-3 py-2.5 text-left text-[12.5px] font-bold uppercase tracking-[0.12em]">
                 Description
               </th>
-              <th className="w-[72px] px-3 py-2.5 text-center text-[11px] font-semibold uppercase tracking-[0.12em]">
+              <th className="w-[72px] px-3 py-2.5 text-center text-[12.5px] font-bold uppercase tracking-[0.12em]">
                 Qty
               </th>
-              <th className="w-[110px] px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em]">
+              <th className="w-[110px] px-3 py-2.5 text-right text-[12.5px] font-bold uppercase tracking-[0.12em]">
                 Price
               </th>
-              <th className="w-[120px] px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-[0.12em]">
+              <th className="w-[120px] px-3 py-2.5 text-right text-[12.5px] font-bold uppercase tracking-[0.12em]">
                 Amount
               </th>
             </tr>
@@ -160,16 +161,16 @@ export function InvoiceDocument({
                 key={`${item.description}-${index}`}
                 style={{ background: index % 2 === 1 ? ROW_ALT : "#ffffff" }}
               >
-                <td className="px-3 py-3 font-medium" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <td className="px-3 py-3 font-semibold" style={{ borderBottom: `1px solid ${LINE}` }}>
                   {item.description}
                 </td>
-                <td className="px-3 py-3 text-center" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <td className="px-3 py-3 text-center font-semibold" style={{ borderBottom: `1px solid ${LINE}` }}>
                   {item.quantity}
                 </td>
-                <td className="px-3 py-3 text-right" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <td className="px-3 py-3 text-right font-semibold" style={{ borderBottom: `1px solid ${LINE}` }}>
                   {formatRs(item.rate)}
                 </td>
-                <td className="px-3 py-3 text-right" style={{ borderBottom: `1px solid ${LINE}` }}>
+                <td className="px-3 py-3 text-right font-bold" style={{ borderBottom: `1px solid ${LINE}` }}>
                   {formatRs(item.amount)}
                 </td>
               </tr>
@@ -178,33 +179,33 @@ export function InvoiceDocument({
         </table>
 
         <div className="mt-4 flex justify-end">
-          <div className="w-[250px] text-[13px] tabular-nums">
+          <div className="w-[250px] text-[15px] font-semibold tabular-nums">
             <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
               <span style={{ color: MUTED }}>Subtotal</span>
-              <span>{formatRs(invoice.subtotal)}</span>
+              <span className="font-bold">{formatRs(invoice.subtotal)}</span>
             </div>
             {invoice.discount > 0 ? (
               <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
                 <span style={{ color: MUTED }}>Discount</span>
-                <span>{formatRs(invoice.discount)}</span>
+                <span className="font-bold">{formatRs(invoice.discount)}</span>
               </div>
             ) : null}
             {invoice.taxPercent > 0 ? (
               <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
                 <span style={{ color: MUTED }}>Sales tax {invoice.taxPercent}%</span>
-                <span>{formatRs(invoice.taxAmount)}</span>
+                <span className="font-bold">{formatRs(invoice.taxAmount)}</span>
               </div>
             ) : null}
             <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
               <span style={{ color: MUTED }}>Total</span>
-              <span className="font-semibold">{formatRs(invoice.total)}</span>
+              <span className="font-bold">{formatRs(invoice.total)}</span>
             </div>
             <div className="flex justify-between py-2" style={{ borderBottom: `1px solid ${LINE}` }}>
               <span style={{ color: MUTED }}>Paid</span>
-              <span>{formatRs(paid)}</span>
+              <span className="font-bold">{formatRs(paid)}</span>
             </div>
             <div
-              className="mt-1 flex justify-between px-3 py-2.5 font-semibold text-white"
+              className="mt-1 flex justify-between px-3 py-2.5 font-bold text-white"
               style={{ background: CYAN }}
             >
               <span>Balance due</span>
@@ -213,7 +214,7 @@ export function InvoiceDocument({
           </div>
         </div>
 
-        <p className="mt-auto pt-12 text-[13px]" style={{ color: MUTED }}>
+        <p className="mt-auto pt-12 text-[14px] font-semibold" style={{ color: MUTED }}>
           {invoice.notes || "Thanks for your business."}
         </p>
       </div>

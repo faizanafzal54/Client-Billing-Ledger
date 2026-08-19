@@ -8,7 +8,6 @@ import { createClient } from "@/app/actions/clients"
 import { createInvoice, updateInvoice } from "@/app/actions/invoices"
 import { createProduct } from "@/app/actions/products"
 import { SubmitButton } from "@/components/submit-button"
-import { Spinner } from "@/components/ui"
 import { notifyDataChanged } from "@/lib/client-data"
 import { todayISO } from "@/lib/utils"
 import { formatPKR } from "@/lib/money"
@@ -66,7 +65,6 @@ export function InvoiceForm({
   const [taxPercent, setTaxPercent] = useState(invoice?.taxPercent ?? defaultTax)
   const [discount, setDiscount] = useState(invoice?.discount ?? 0)
   const [error, setError] = useState("")
-  const [pending, setPending] = useState(false)
   const [showClient, setShowClient] = useState(false)
   const [showClientMore, setShowClientMore] = useState(false)
   const [showProduct, setShowProduct] = useState<number | null>(null)
@@ -107,15 +105,10 @@ export function InvoiceForm({
 
   async function onSubmit(formData: FormData) {
     setError("")
-    setPending(true)
     formData.set("lines", JSON.stringify(lines))
-    try {
-      const result = invoice ? await updateInvoice(formData) : await createInvoice(formData)
-      if (result?.error) setError(result.error)
-      else if (invoice && result?.ok) router.push(`/invoices/${invoice.id}`)
-    } finally {
-      setPending(false)
-    }
+    const result = invoice ? await updateInvoice(formData) : await createInvoice(formData)
+    if (result?.error) setError(result.error)
+    else if (invoice && result?.ok) router.push(`/invoices/${invoice.id}`)
   }
 
   async function addClient(formData: FormData) {
@@ -352,10 +345,9 @@ export function InvoiceForm({
       {error ? <p className="rounded-lg bg-bad/10 px-3 py-2 text-sm text-bad">{error}</p> : null}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>
-          {pending ? <Spinner /> : null}
-          {pending ? "Saving…" : invoice ? "Update invoice" : "Create invoice"}
-        </button>
+        <SubmitButton className="btn-primary" pendingLabel="Saving…">
+          {invoice ? "Update invoice" : "Create invoice"}
+        </SubmitButton>
       </div>
     </form>
       {showClient ? (
