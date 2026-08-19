@@ -27,7 +27,7 @@ export function InvoicePreview({
     function update() {
       const sheet = sheetRef.current
       if (!sheet) return
-      const width = frame.clientWidth
+      const width = frame?.clientWidth
       const sheetWidth = sheet.offsetWidth
       if (!width || !sheetWidth) return
       const next = Math.min(1, width / sheetWidth)
