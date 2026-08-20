@@ -14,7 +14,7 @@ export async function GET() {
       orderBy: { name: "asc" },
     }),
     prisma.product.findMany({
-      select: { id: true, name: true, unit: true, defaultRate: true },
+      select: { id: true, name: true, unit: true, defaultRate: true, description: true },
       orderBy: { name: "asc" },
     }),
     getCompany(),

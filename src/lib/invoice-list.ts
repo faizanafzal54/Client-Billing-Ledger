@@ -5,7 +5,6 @@ export const INVOICE_PAGE_SIZE = 20
 export type InvoiceListFilters = {
   query: string
   clientId: string
-  status: string
   from: string
   to: string
   page: number
@@ -20,12 +19,10 @@ function param(searchParams: Record<string, string | string[] | undefined>, key:
 export function parseInvoiceListParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): InvoiceListFilters {
-  const status = param(searchParams, "status")
   const clientId = param(searchParams, "client")
   return {
     query: param(searchParams, "q"),
     clientId: /^[a-f\d]{24}$/i.test(clientId) ? clientId : "",
-    status: status === "unpaid" || status === "partial" || status === "paid" ? status : "",
     from: param(searchParams, "from"),
     to: param(searchParams, "to"),
     page: Math.max(1, Number.parseInt(param(searchParams, "page"), 10) || 1),
@@ -35,9 +32,6 @@ export function parseInvoiceListParams(
 export function invoiceListWhere(filters: InvoiceListFilters): Prisma.InvoiceWhereInput {
   const where: Prisma.InvoiceWhereInput = {}
   if (filters.clientId) where.clientId = filters.clientId
-  if (filters.status === "paid") where.status = "paid"
-  if (filters.status === "unpaid") where.status = { in: ["unpaid", "partial"] }
-  if (filters.status === "partial") where.status = "partial"
   if (filters.from || filters.to) {
     where.date = {}
     if (filters.from) where.date.gte = new Date(`${filters.from}T00:00:00.000`)
@@ -68,7 +62,6 @@ export function invoiceListHref(filters: InvoiceListFilters, page = filters.page
   const params = new URLSearchParams()
   if (filters.query) params.set("q", filters.query)
   if (filters.clientId) params.set("client", filters.clientId)
-  if (filters.status) params.set("status", filters.status)
   if (filters.from) params.set("from", filters.from)
   if (filters.to) params.set("to", filters.to)
   if (page > 1) params.set("page", String(page))

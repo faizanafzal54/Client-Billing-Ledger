@@ -1,5 +1,4 @@
 import { requireApiUser, json } from "@/lib/api-auth"
-import { displayInvoiceNo } from "@/lib/utils"
 import { getClientReport, getCompany } from "@/lib/queries"
 
 export const dynamic = "force-dynamic"
@@ -41,15 +40,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       clientNumber: invoice.clientNumber,
       date: invoice.date.toISOString(),
       total: invoice.total,
-      status: invoice.status,
     })),
     ledger: ledger.map((row) => ({
       ...row,
       date: row.date.toISOString(),
-    })),
-    invoiceOptions: client.invoices.map((invoice) => ({
-      id: invoice.id,
-      label: `${displayInvoiceNo(invoice.globalNumber)} · ${invoice.clientNumber}`,
     })),
   })
 }

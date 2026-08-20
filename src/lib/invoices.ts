@@ -21,12 +21,6 @@ export async function nextInvoiceNumbers(clientId: string, prefix: string) {
   }
 }
 
-export function invoiceStatus(total: number, paid: number) {
-  if (paid <= 0) return "unpaid"
-  if (paid + 0.01 >= total) return "paid"
-  return "partial"
-}
-
 export const invoiceInclude = {
   client: true,
   items: { orderBy: { sortOrder: "asc" as const } },

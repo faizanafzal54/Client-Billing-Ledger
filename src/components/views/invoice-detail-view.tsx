@@ -6,7 +6,6 @@ import { DeleteInvoiceButton } from "@/components/delete-invoice-button"
 import { InvoiceDocument } from "@/components/invoice-document"
 import { InvoicePreview } from "@/components/invoice-preview"
 import { InvoicePaymentList, PaymentForm } from "@/components/payment-form"
-import { PageHeader, StatusBadge } from "@/components/ui"
 import { InvoiceSheetSkeleton, LoadError, PageHeaderSkeleton } from "@/components/skeletons"
 import { useApi } from "@/lib/client-data"
 import { formatPKR } from "@/lib/money"
@@ -28,7 +27,6 @@ type InvoiceDetailPayload = {
     subtotal: number
     taxAmount: number
     total: number
-    status: string
     client: {
       name: string
       address: string
@@ -89,20 +87,24 @@ export function InvoiceDetailView() {
 
   return (
     <div>
-      <div className="no-print">
-        <PageHeader
-          title={`${displayInvoiceNo(invoice.globalNumber)} · ${invoice.clientNumber}`}
-          description={`${invoice.client.name} · ${invoice.status}`}
-          actions={
-            <>
-              <StatusBadge status={invoice.status} />
-              <Link href={`/invoices/${invoice.id}/edit`} className="btn-ghost">
-                Edit
-              </Link>
-              <DeleteInvoiceButton id={invoice.id} />
-            </>
-          }
-        />
+      <div className="no-print mb-6 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <Link
+            href={`/clients/${invoice.clientId}`}
+            className="font-display text-2xl text-ink hover:underline sm:text-3xl"
+          >
+            {invoice.client.name}
+          </Link>
+          <p className="mt-1 text-lg text-muted sm:text-xl">
+            {displayInvoiceNo(invoice.globalNumber)} · {invoice.clientNumber}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap justify-end gap-2">
+          <Link href={`/invoices/${invoice.id}/edit`} className="btn-ghost">
+            Edit
+          </Link>
+          <DeleteInvoiceButton id={invoice.id} />
+        </div>
       </div>
 
       <div className="mb-6">
@@ -111,7 +113,7 @@ export function InvoiceDetailView() {
         </InvoicePreview>
       </div>
 
-      <section className="no-print grid gap-4 lg:grid-cols-2">
+      {/* <section className="no-print grid gap-4 lg:grid-cols-2">
         <div className="card p-4 sm:p-5">
           <h2 className="font-display text-xl">Record payment</h2>
           <p className="mb-4 text-sm text-muted">
@@ -135,7 +137,7 @@ export function InvoiceDetailView() {
             }))}
           />
         </div>
-      </section>
+      </section> */}
     </div>
   )
 }

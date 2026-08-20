@@ -12,13 +12,19 @@ import { fileSlug, formatDate, monthKey, monthLabel } from "@/lib/utils"
 function paymentValues(row: LedgerRow): PaymentValues {
   return {
     id: row.id,
-    amount: row.credit,
+    amount: row.credit || row.debit,
     date: row.date,
     method: row.method || "bank",
     reference: row.paymentReference || "",
     notes: row.notes || "",
     invoiceId: row.invoiceId || "",
+    kind: row.kind === "debit" ? "debit" : "credit",
   }
+}
+
+function paymentLabel(row: LedgerRow) {
+  if (row.kind === "debit") return `Previous pending · ${row.reference}`
+  return `Payment · ${row.reference}`
 }
 
 function groupsFor(ledger: LedgerRow[], month: string): LedgerMonthGroup[] {
@@ -42,13 +48,11 @@ export function ClientLedger({
   clientName,
   company,
   ledger,
-  invoices,
 }: {
   clientId: string
   clientName: string
   company: LedgerCompany
   ledger: LedgerRow[]
-  invoices: Array<{ id: string; label: string }>
 }) {
   const exportRef = useRef<HTMLDivElement>(null)
   const [month, setMonth] = useState("all")
@@ -191,7 +195,7 @@ export function ClientLedger({
                           Invoice {row.reference}
                         </Link>
                       ) : (
-                        <p className="text-sm">Payment · {row.reference}</p>
+                        <p className="text-sm">{paymentLabel(row)}</p>
                       )}
                     </div>
                     <div className="flex shrink-0 items-start gap-1">
@@ -277,7 +281,7 @@ export function ClientLedger({
                             Invoice {row.reference}
                           </Link>
                         ) : (
-                          `Payment · ${row.reference}`
+                          paymentLabel(row)
                         )}
                       </td>
                       <td className="px-4 py-2 text-right">{row.debit ? formatPKR(row.debit) : "—"}</td>
@@ -322,7 +326,6 @@ export function ClientLedger({
         <EditPaymentDialog
           clientId={clientId}
           payment={paymentValues(editing)}
-          invoices={invoices}
           onClose={() => setEditing(null)}
         />
       ) : null}

@@ -15,7 +15,6 @@ export async function GET() {
       clientNumber: invoice.clientNumber,
       date: invoice.date.toISOString(),
       total: invoice.total,
-      status: invoice.status,
       clientName: invoice.client.name,
     })),
   })

@@ -4,11 +4,11 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react"
-import { EmptyState, StatusBadge } from "@/components/ui"
+import { EmptyState } from "@/components/ui"
 import type { InvoiceListFilters } from "@/lib/invoice-list"
 import { invoiceListHref } from "@/lib/invoice-list"
 import { formatPKR } from "@/lib/money"
-import { displayInvoiceNo, formatDate, cn } from "@/lib/utils"
+import { displayInvoiceNo, formatDate } from "@/lib/utils"
 
 export type InvoiceRow = {
   id: string
@@ -18,7 +18,6 @@ export type InvoiceRow = {
   clientName: string
   date: string
   total: number
-  status: string
 }
 
 export function InvoiceList({
@@ -51,7 +50,6 @@ export function InvoiceList({
         invoiceListHref({
           query,
           clientId: filters.clientId,
-          status: filters.status,
           from: filters.from,
           to: filters.to,
           page: 1,
@@ -59,9 +57,9 @@ export function InvoiceList({
       )
     }, 350)
     return () => window.clearTimeout(timer)
-  }, [filters.clientId, filters.from, filters.query, filters.status, filters.to, query, router])
+  }, [filters.clientId, filters.from, filters.query, filters.to, query, router])
 
-  const active = Boolean(filters.query || filters.clientId || filters.status || filters.from || filters.to)
+  const active = Boolean(filters.query || filters.clientId || filters.from || filters.to)
   const extraActive = Boolean(filters.clientId || filters.from || filters.to)
   const fromItem = total === 0 ? 0 : (filters.page - 1) * pageSize + 1
   const toItem = Math.min(filters.page * pageSize, total)
@@ -143,29 +141,6 @@ export function InvoiceList({
             </div>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            className={cn("btn-ghost py-1.5", !filters.status && "border-ink bg-cream")}
-            type="button"
-            onClick={() => setFilter({ status: "" })}
-          >
-            All
-          </button>
-          <button
-            className={cn("btn-ghost py-1.5", filters.status === "unpaid" && "border-ink bg-cream")}
-            type="button"
-            onClick={() => setFilter({ status: filters.status === "unpaid" ? "" : "unpaid" })}
-          >
-            Unpaid
-          </button>
-          <button
-            className={cn("btn-ghost py-1.5", filters.status === "paid" && "border-ink bg-cream")}
-            type="button"
-            onClick={() => setFilter({ status: filters.status === "paid" ? "" : "paid" })}
-          >
-            Paid
-          </button>
-        </div>
         {active ? (
           <div className="mt-3 flex items-center justify-between gap-3">
             <p className="text-xs text-muted">
@@ -190,7 +165,7 @@ export function InvoiceList({
           title={active ? "No matching invoices" : "No invoices yet"}
           description={
             active
-              ? "Try a different search, client, status, or date range."
+              ? "Try a different search, client, or date range."
               : "Create an invoice and add products or clients on the fly if they are not already in the ledger."
           }
           action={
@@ -204,19 +179,18 @@ export function InvoiceList({
       ) : (
         <>
           <div className="card overflow-hidden">
-            <div className="hidden grid-cols-[1.2fr_1.1fr_0.8fr_0.7fr_0.6fr] gap-3 border-b border-line bg-cream px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
+            <div className="hidden grid-cols-[1.2fr_1.1fr_0.8fr_0.9fr] gap-3 border-b border-line bg-cream px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
               <span>Client</span>
               <span>Numbers</span>
               <span>Date</span>
               <span>Total</span>
-              <span>Status</span>
             </div>
             <ul>
               {invoices.map((invoice) => (
                 <li key={invoice.id} className="border-b border-line last:border-0">
                   <Link
                     href={`/invoices/${invoice.id}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 md:grid md:grid-cols-[1.2fr_1.1fr_0.8fr_0.7fr_0.6fr] md:items-center"
+                    className="flex items-center justify-between gap-3 px-4 py-3 md:grid md:grid-cols-[1.2fr_1.1fr_0.8fr_0.9fr] md:items-center"
                   >
                     <div className="min-w-0">
                       <p className="font-bold text-brass-dark">{invoice.clientName}</p>
@@ -228,12 +202,7 @@ export function InvoiceList({
                       {displayInvoiceNo(invoice.globalNumber)} · {invoice.clientNumber}
                     </p>
                     <p className="hidden text-sm text-muted md:block">{formatDate(invoice.date)}</p>
-                    <div className="shrink-0 text-right md:contents">
-                      <p className="text-sm md:text-left">{formatPKR(invoice.total)}</p>
-                      <div className="mt-1 flex justify-end md:mt-0 md:block">
-                        <StatusBadge status={invoice.status} />
-                      </div>
-                    </div>
+                    <p className="shrink-0 text-sm md:text-left">{formatPKR(invoice.total)}</p>
                   </Link>
                 </li>
               ))}

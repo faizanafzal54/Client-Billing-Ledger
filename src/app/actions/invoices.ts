@@ -3,16 +3,22 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireUser } from "@/lib/auth"
-import { invoiceStatus, nextInvoiceNumbers } from "@/lib/invoices"
+import { nextInvoiceNumbers } from "@/lib/invoices"
 import { prisma } from "@/lib/prisma"
 import type { ActionResult } from "@/lib/definitions"
 
 type LineInput = {
   productId?: string
   name: string
+  detail?: string
   unit: string
   quantity: number
   rate: number
+}
+
+function lineDescription(line: LineInput) {
+  const extra = line.detail?.trim()
+  return extra ? `${line.name}\n${extra}` : line.name
 }
 
 function parseLines(formData: FormData): LineInput[] {
@@ -74,7 +80,7 @@ export async function createInvoice(formData: FormData): Promise<ActionResult> {
     const productId = await resolveProductId(line)
     items.push({
       productId,
-      description: line.name,
+      description: lineDescription(line),
       quantity: line.quantity,
       unit: line.unit || "KG",
       rate: line.rate,
@@ -98,7 +104,6 @@ export async function createInvoice(formData: FormData): Promise<ActionResult> {
       subtotal: amounts.subtotal,
       taxAmount: amounts.taxAmount,
       total: amounts.total,
-      status: "unpaid",
       createdBy: user.email,
       items: { create: items },
     },
@@ -121,10 +126,7 @@ export async function updateInvoice(formData: FormData): Promise<ActionResult> {
   if (!clientId) return { ok: false, error: "Select a client." }
   if (!lines.length) return { ok: false, error: "Add at least one product line." }
 
-  const existing = await prisma.invoice.findUnique({
-    where: { id },
-    include: { payments: true },
-  })
+  const existing = await prisma.invoice.findUnique({ where: { id } })
   if (!existing) return { ok: false, error: "Invoice not found." }
 
   const taxPercent = Number(formData.get("taxPercent") || 0)
@@ -132,14 +134,13 @@ export async function updateInvoice(formData: FormData): Promise<ActionResult> {
   const date = new Date(String(formData.get("date") || existing.date.toISOString()))
   const dueRaw = String(formData.get("dueDate") || "")
   const amounts = totals(lines, taxPercent, discount)
-  const paid = existing.payments.reduce((sum, payment) => sum + payment.amount, 0)
 
   const items = []
   for (const [index, line] of lines.entries()) {
     const productId = await resolveProductId(line)
     items.push({
       productId,
-      description: line.name,
+      description: lineDescription(line),
       quantity: line.quantity,
       unit: line.unit || "KG",
       rate: line.rate,
@@ -163,7 +164,6 @@ export async function updateInvoice(formData: FormData): Promise<ActionResult> {
         subtotal: amounts.subtotal,
         taxAmount: amounts.taxAmount,
         total: amounts.total,
-        status: invoiceStatus(amounts.total, paid),
         items: { create: items },
       },
     }),

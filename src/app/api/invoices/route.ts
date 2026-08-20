@@ -42,7 +42,6 @@ export async function GET(request: Request) {
       clientName: invoice.client.name,
       date: invoice.date.toISOString(),
       total: invoice.total,
-      status: invoice.status,
     })),
     clients,
     filters,

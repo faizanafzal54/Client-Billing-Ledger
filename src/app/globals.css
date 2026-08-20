@@ -153,21 +153,6 @@ button {
   opacity: 0.9;
 }
 
-.status-unpaid {
-  background: rgb(159 18 57 / 0.1);
-  color: var(--bad);
-}
-
-.status-partial {
-  background: rgb(180 83 9 / 0.1);
-  color: var(--warn);
-}
-
-.status-paid {
-  background: rgb(31 122 77 / 0.1);
-  color: var(--good);
-}
-
 @media print {
   @page {
     size: A4 portrait;

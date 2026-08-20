@@ -162,7 +162,11 @@ export function InvoiceDocument({
                 style={{ background: index % 2 === 1 ? ROW_ALT : "#ffffff" }}
               >
                 <td className="px-3 py-3 font-semibold" style={{ borderBottom: `1px solid ${LINE}` }}>
-                  {item.description}
+                  {item.description.split("\n").map((part, lineIndex) => (
+                    <span key={`${item.description}-${index}-${lineIndex}`} className={lineIndex === 0 ? "block" : "mt-1 block font-medium"} style={lineIndex === 0 ? undefined : { color: MUTED, fontSize: 15 }}>
+                      {part}
+                    </span>
+                  ))}
                 </td>
                 <td className="px-3 py-3 text-center font-semibold" style={{ borderBottom: `1px solid ${LINE}` }}>
                   {item.quantity}

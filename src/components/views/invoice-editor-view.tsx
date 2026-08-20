@@ -8,7 +8,7 @@ import { useApi } from "@/lib/client-data"
 
 type FormOptions = {
   clients: Array<{ id: string; name: string; prefix: string }>
-  products: Array<{ id: string; name: string; unit: string; defaultRate: number }>
+  products: Array<{ id: string; name: string; unit: string; defaultRate: number; description: string }>
   defaultTax: number
 }
 
@@ -84,13 +84,17 @@ export function InvoiceEditorView({ mode }: { mode: "new" | "edit" }) {
                 notes: record.notes,
                 taxPercent: record.taxPercent,
                 discount: record.discount,
-                lines: record.items.map((item) => ({
-                  productId: item.productId ?? undefined,
-                  name: item.description,
-                  unit: item.unit,
-                  quantity: item.quantity,
-                  rate: item.rate,
-                })),
+                lines: record.items.map((item) => {
+                  const [name, ...rest] = item.description.split("\n")
+                  return {
+                    productId: item.productId ?? undefined,
+                    name,
+                    detail: rest.join("\n").trim(),
+                    unit: item.unit,
+                    quantity: item.quantity,
+                    rate: item.rate,
+                  }
+                }),
               }
             : undefined
         }

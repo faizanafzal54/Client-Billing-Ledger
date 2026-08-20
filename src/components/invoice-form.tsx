@@ -23,14 +23,16 @@ type ProductOption = {
   name: string
   unit: string
   defaultRate: number
+  description: string
 }
 
 type Line = {
   productId?: string
   name: string
+  detail: string
   unit: string
-  quantity: number
-  rate: number
+  quantity: number | ""
+  rate: number | ""
 }
 
 type InvoiceSeed = {
@@ -62,8 +64,8 @@ export function InvoiceForm({
   const [productList, setProductList] = useState(products)
   const [clientId, setClientId] = useState(invoice?.clientId ?? clients[0]?.id ?? "")
   const [lines, setLines] = useState<Line[]>(invoice?.lines?.length ? invoice.lines : [])
-  const [taxPercent, setTaxPercent] = useState(invoice?.taxPercent ?? defaultTax)
-  const [discount, setDiscount] = useState(invoice?.discount ?? 0)
+  const [taxPercent, setTaxPercent] = useState<number | "">(invoice?.taxPercent ?? (defaultTax || ""))
+  const [discount, setDiscount] = useState<number | "">(invoice?.discount ?? "")
   const [error, setError] = useState("")
   const [showClient, setShowClient] = useState(false)
   const [showClientMore, setShowClientMore] = useState(false)
@@ -73,12 +75,12 @@ export function InvoiceForm({
     () => lines.reduce((sum, line) => sum + (line.quantity || 0) * (line.rate || 0), 0),
     [lines],
   )
-  const afterDiscount = Math.max(0, subtotal - discount)
-  const taxAmount = afterDiscount * (taxPercent / 100)
+  const afterDiscount = Math.max(0, subtotal - (Number(discount) || 0))
+  const taxAmount = afterDiscount * ((Number(taxPercent) || 0) / 100)
   const total = afterDiscount + taxAmount
 
   function addLine() {
-    setLines((current) => [...current, { name: "", unit: "KG", quantity: 1, rate: 0 }])
+    setLines((current) => [...current, { name: "", detail: "", unit: "KG", quantity: "", rate: "" }])
   }
 
   function removeLine(index: number) {
@@ -98,8 +100,9 @@ export function InvoiceForm({
     updateLine(index, {
       productId: product.id,
       name: product.name,
+      detail: product.description || "",
       unit: product.unit,
-      rate: product.defaultRate,
+      rate: product.defaultRate || "",
     })
   }
 
@@ -140,13 +143,15 @@ export function InvoiceForm({
       name: String(formData.get("name") || ""),
       unit: String(formData.get("unit") || "KG"),
       defaultRate: Number(formData.get("defaultRate") || 0),
+      description: String(formData.get("description") || "").trim(),
     }
     setProductList((current) => [...current, created])
     updateLine(index, {
       productId: created.id,
       name: created.name,
+      detail: created.description,
       unit: created.unit,
-      rate: created.defaultRate,
+      rate: created.defaultRate || "",
     })
     setShowProduct(null)
     router.refresh()
@@ -238,6 +243,15 @@ export function InvoiceForm({
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <label className="label">Description</label>
+                    <textarea
+                      className="field min-h-16"
+                      value={line.detail}
+                      onChange={(e) => updateLine(index, { detail: e.target.value })}
+                      placeholder="Optional details for this line"
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="label">Qty</label>
@@ -247,7 +261,7 @@ export function InvoiceForm({
                         min="0"
                         step="0.01"
                         value={line.quantity}
-                        onChange={(e) => updateLine(index, { quantity: Number(e.target.value) })}
+                        onChange={(e) => updateLine(index, { quantity: e.target.value === "" ? "" : Number(e.target.value) })}
                       />
                     </div>
                     <div>
@@ -266,12 +280,16 @@ export function InvoiceForm({
                         min="0"
                         step="0.01"
                         value={line.rate}
-                        onChange={(e) => updateLine(index, { rate: Number(e.target.value) })}
+                        onChange={(e) => updateLine(index, { rate: e.target.value === "" ? "" : Number(e.target.value) })}
                       />
                     </div>
                     <div>
                       <label className="label">Amount</label>
-                      <p className="field bg-cream">{formatPKR(line.quantity * line.rate)}</p>
+                      <p className="field bg-cream">
+                        {line.quantity === "" && line.rate === ""
+                          ? ""
+                          : formatPKR((Number(line.quantity) || 0) * (Number(line.rate) || 0))}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -310,7 +328,7 @@ export function InvoiceForm({
               min="0"
               step="0.01"
               value={discount}
-              onChange={(e) => setDiscount(Number(e.target.value))}
+              onChange={(e) => setDiscount(e.target.value === "" ? "" : Number(e.target.value))}
             />
           </div>
           <div>
@@ -322,7 +340,7 @@ export function InvoiceForm({
               min="0"
               step="0.01"
               value={taxPercent}
-              onChange={(e) => setTaxPercent(Number(e.target.value))}
+              onChange={(e) => setTaxPercent(e.target.value === "" ? "" : Number(e.target.value))}
             />
           </div>
           <div className="space-y-1 border-t border-line pt-3 text-sm">
@@ -390,7 +408,7 @@ export function InvoiceForm({
 
       {showProduct !== null ? (
         <Modal title="New product" onClose={() => setShowProduct(null)}>
-          <form action={(formData) => addProduct(formData, showProduct)} className="space-y-3">
+          <form key={showProduct} action={(formData) => addProduct(formData, showProduct)} className="space-y-3">
             <div>
               <label className="label">Name</label>
               <input className="field" name="name" required placeholder="PVC Cement 500 ML" />
@@ -402,8 +420,12 @@ export function InvoiceForm({
               </div>
               <div>
                 <label className="label">Default rate</label>
-                <input className="field" type="number" name="defaultRate" min="0" step="0.01" defaultValue="0" />
+                <input className="field" type="number" name="defaultRate" min="0" step="0.01" defaultValue="" />
               </div>
+            </div>
+            <div>
+              <label className="label">Description</label>
+              <textarea className="field min-h-20" name="description" placeholder="Optional product details" />
             </div>
             <SubmitButton className="btn-primary w-full" pendingLabel="Adding…">
               Add product

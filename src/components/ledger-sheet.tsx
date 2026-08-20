@@ -5,6 +5,7 @@ export type LedgerRow = {
   id: string
   date: string
   type: "invoice" | "payment"
+  kind?: "credit" | "debit"
   reference: string
   debit: number
   credit: number
@@ -105,7 +106,11 @@ export function LedgerSheet({
                   <tr key={`${row.type}-${row.id}`}>
                     <td style={{ padding: "8px 10px", borderTop: "1px solid #d8d0c2" }}>{formatDate(row.date)}</td>
                     <td style={{ padding: "8px 10px", borderTop: "1px solid #d8d0c2" }}>
-                      {row.type === "invoice" ? `Invoice ${row.reference}` : `Payment · ${row.reference}`}
+                      {row.type === "invoice"
+                        ? `Invoice ${row.reference}`
+                        : row.kind === "debit"
+                          ? `Previous pending · ${row.reference}`
+                          : `Payment · ${row.reference}`}
                     </td>
                     <td style={{ padding: "8px 10px", borderTop: "1px solid #d8d0c2", textAlign: "right" }}>
                       {row.debit ? formatPKR(row.debit) : "—"}

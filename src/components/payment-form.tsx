@@ -18,21 +18,19 @@ export type PaymentValues = {
   reference: string
   notes: string
   invoiceId: string
+  kind: "credit" | "debit"
 }
 
 export function PaymentForm({
   clientId,
   invoiceId,
-  remaining,
   payment,
-  invoices,
   onDone,
 }: {
   clientId: string
   invoiceId?: string
   remaining?: number
   payment?: PaymentValues
-  invoices?: Array<{ id: string; label: string }>
   onDone?: () => void
 }) {
   const router = useRouter()
@@ -40,8 +38,7 @@ export function PaymentForm({
   const [message, setMessage] = useState("")
   const [pending, startTransition] = useTransition()
   const editing = Boolean(payment)
-  const lockedInvoiceId = invoiceId || payment?.invoiceId || ""
-  const showInvoiceSelect = !invoiceId && Boolean(invoices?.length)
+  const [kind, setKind] = useState<"credit" | "debit">(payment?.kind === "debit" ? "debit" : "credit")
 
   function submit(formData: FormData) {
     setError("")
@@ -52,7 +49,7 @@ export function PaymentForm({
         setError(result.error || (editing ? "Could not update payment." : "Could not record payment."))
         return
       }
-      setMessage(editing ? "Payment updated." : "Payment recorded.")
+      setMessage(editing ? "Entry updated." : kind === "debit" ? "Previous pending added." : "Payment recorded.")
       router.refresh()
       notifyDataChanged()
       onDone?.()
@@ -63,9 +60,7 @@ export function PaymentForm({
     <form action={submit} className="space-y-3">
       <input type="hidden" name="clientId" value={clientId} />
       {payment ? <input type="hidden" name="id" value={payment.id} /> : null}
-      {invoiceId || (payment && !showInvoiceSelect) ? (
-        <input type="hidden" name="invoiceId" value={lockedInvoiceId} />
-      ) : null}
+      {kind === "credit" && invoiceId ? <input type="hidden" name="invoiceId" value={invoiceId} /> : null}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label" htmlFor="payment-amount">
@@ -79,8 +74,23 @@ export function PaymentForm({
             min="0"
             step="0.01"
             required
-            defaultValue={payment?.amount ?? (remaining && remaining > 0 ? remaining : "")}
+            defaultValue={payment?.amount ?? ""}
           />
+        </div>
+        <div>
+          <label className="label" htmlFor="payment-kind">
+            Type
+          </label>
+          <select
+            id="payment-kind"
+            className="field"
+            name="kind"
+            value={kind}
+            onChange={(event) => setKind(event.target.value === "debit" ? "debit" : "credit")}
+          >
+            <option value="credit">Credit</option>
+            <option value="debit">Debit</option>
+          </select>
         </div>
         <div>
           <label className="label" htmlFor="payment-date">
@@ -110,53 +120,18 @@ export function PaymentForm({
             <option value="cheque">Cheque</option>
           </select>
         </div>
-        {showInvoiceSelect ? (
-          <div>
-            <label className="label" htmlFor="payment-invoice">
-              Invoice
-            </label>
-            <select
-              id="payment-invoice"
-              className="field"
-              name="invoiceId"
-              defaultValue={payment?.invoiceId || ""}
-            >
-              <option value="">Unallocated</option>
-              {invoices?.map((invoice) => (
-                <option key={invoice.id} value={invoice.id}>
-                  {invoice.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div>
-            <label className="label" htmlFor="payment-reference">
-              Reference
-            </label>
-            <input
-              id="payment-reference"
-              className="field"
-              name="reference"
-              placeholder="Cheque / TRN no."
-              defaultValue={payment?.reference || ""}
-            />
-          </div>
-        )}
-        {showInvoiceSelect ? (
-          <div className="col-span-2">
-            <label className="label" htmlFor="payment-reference">
-              Reference
-            </label>
-            <input
-              id="payment-reference"
-              className="field"
-              name="reference"
-              placeholder="Cheque / TRN no."
-              defaultValue={payment?.reference || ""}
-            />
-          </div>
-        ) : null}
+        <div className="col-span-2">
+          <label className="label" htmlFor="payment-reference">
+            Reference
+          </label>
+          <input
+            id="payment-reference"
+            className="field"
+            name="reference"
+            placeholder={kind === "debit" ? "Previous pending" : "Cheque / TRN no."}
+            defaultValue={payment?.reference || ""}
+          />
+        </div>
         <div className="col-span-2">
           <label className="label" htmlFor="payment-notes">
             Notes
@@ -173,7 +148,7 @@ export function PaymentForm({
       {message ? <p className="text-sm text-good">{message}</p> : null}
       <button className="btn-primary" disabled={pending} type="submit" aria-busy={pending}>
         {pending ? <Spinner /> : null}
-        {pending ? "Saving…" : editing ? "Save payment" : "Record payment"}
+        {pending ? "Saving…" : editing ? "Save" : kind === "debit" ? "Add debit" : "Record payment"}
       </button>
     </form>
   )
@@ -182,13 +157,11 @@ export function PaymentForm({
 export function EditPaymentDialog({
   clientId,
   payment,
-  invoices,
   invoiceId,
   onClose,
 }: {
   clientId: string
   payment: PaymentValues
-  invoices?: Array<{ id: string; label: string }>
   invoiceId?: string
   onClose: () => void
 }) {
@@ -209,7 +182,6 @@ export function EditPaymentDialog({
           clientId={clientId}
           invoiceId={invoiceId}
           payment={payment}
-          invoices={invoices}
           onDone={onClose}
         />
       </div>

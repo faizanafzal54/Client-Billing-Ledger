@@ -17,14 +17,24 @@ export async function getCompany() {
   })
 }
 
+export function paymentSides(payments: Array<{ amount: number; kind?: string | null }>) {
+  let credit = 0
+  let debit = 0
+  for (const payment of payments) {
+    if (payment.kind === "debit") debit += payment.amount
+    else credit += payment.amount
+  }
+  return { credit, debit }
+}
+
 export async function clientBalance(clientId: string) {
   const [invoices, payments] = await Promise.all([
     prisma.invoice.aggregate({ where: { clientId }, _sum: { total: true } }),
-    prisma.payment.aggregate({ where: { clientId }, _sum: { amount: true } }),
+    prisma.payment.findMany({ where: { clientId }, select: { amount: true, kind: true } }),
   ])
   const billed = invoices._sum.total ?? 0
-  const paid = payments._sum.amount ?? 0
-  return { billed, paid, outstanding: billed - paid }
+  const { credit, debit } = paymentSides(payments)
+  return { billed, paid: credit, outstanding: billed + debit - credit }
 }
 
 export async function getDashboardData() {
@@ -43,7 +53,7 @@ export async function getDashboardData() {
   ])
 
   const billed = invoices.reduce((sum, invoice) => sum + invoice.total, 0)
-  const paid = payments.reduce((sum, payment) => sum + payment.amount, 0)
+  const { credit: paid, debit: extraDebit } = paymentSides(payments)
   const monthSales = invoices
     .filter((invoice) => invoice.date >= monthStart)
     .reduce((sum, invoice) => sum + invoice.total, 0)
@@ -73,13 +83,13 @@ export async function getDashboardData() {
       const clientInvoices = invoices.filter((invoice) => invoice.clientId === client.id)
       const clientPayments = payments.filter((payment) => payment.clientId === client.id)
       const clientBilled = clientInvoices.reduce((sum, invoice) => sum + invoice.total, 0)
-      const clientPaid = clientPayments.reduce((sum, payment) => sum + payment.amount, 0)
+      const { credit: clientPaid, debit: clientDebit } = paymentSides(clientPayments)
       return {
         id: client.id,
         name: client.name,
         billed: clientBilled,
         paid: clientPaid,
-        outstanding: clientBilled - clientPaid,
+        outstanding: clientBilled + clientDebit - clientPaid,
         invoices: clientInvoices.length,
       }
     })
@@ -102,7 +112,7 @@ export async function getDashboardData() {
   return {
     billed,
     paid,
-    outstanding: billed - paid,
+    outstanding: billed + extraDebit - paid,
     monthSales,
     yearSales,
     invoiceCount: invoices.length,
@@ -129,13 +139,14 @@ export async function getClientReport(clientId: string) {
   if (!client) return null
 
   const billed = client.invoices.reduce((sum, invoice) => sum + invoice.total, 0)
-  const paid = client.payments.reduce((sum, payment) => sum + payment.amount, 0)
+  const { credit: paid, debit: extraDebit } = paymentSides(client.payments)
 
   const ledger = [
     ...client.invoices.map((invoice) => ({
       id: invoice.id,
       date: invoice.date,
       type: "invoice" as const,
+      kind: "debit" as const,
       reference: `${displayInvoiceNo(invoice.globalNumber)} / ${invoice.clientNumber}`,
       debit: invoice.total,
       credit: 0,
@@ -145,19 +156,23 @@ export async function getClientReport(clientId: string) {
       invoiceId: "",
       paymentReference: "",
     })),
-    ...client.payments.map((payment) => ({
-      id: payment.id,
-      date: payment.date,
-      type: "payment" as const,
-      reference: payment.reference || payment.method,
-      debit: 0,
-      credit: payment.amount,
-      note: payment.notes,
-      method: payment.method,
-      notes: payment.notes,
-      invoiceId: payment.invoiceId || "",
-      paymentReference: payment.reference,
-    })),
+    ...client.payments.map((payment) => {
+      const isDebit = payment.kind === "debit"
+      return {
+        id: payment.id,
+        date: payment.date,
+        type: "payment" as const,
+        kind: isDebit ? ("debit" as const) : ("credit" as const),
+        reference: payment.reference || payment.method,
+        debit: isDebit ? payment.amount : 0,
+        credit: isDebit ? 0 : payment.amount,
+        note: payment.notes,
+        method: payment.method,
+        notes: payment.notes,
+        invoiceId: payment.invoiceId || "",
+        paymentReference: payment.reference,
+      }
+    }),
   ].sort((a, b) => a.date.getTime() - b.date.getTime())
 
   let running = 0
@@ -185,7 +200,7 @@ export async function getClientReport(clientId: string) {
     client,
     billed,
     paid,
-    outstanding: billed - paid,
+    outstanding: billed + extraDebit - paid,
     ledger: ledgerWithBalance,
     products: [...productSales.values()].sort((a, b) => b.amount - a.amount),
   }

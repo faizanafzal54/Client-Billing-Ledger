@@ -78,7 +78,6 @@ model Invoice {
   subtotal     Float
   taxAmount    Float
   total        Float
-  status       String        @default("unpaid")
   createdBy    String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -111,6 +110,7 @@ model Payment {
   method    String   @default("cash")
   reference String   @default("")
   notes     String   @default("")
+  kind      String   @default("credit")
   createdAt DateTime @default(now())
 }
 

@@ -59,7 +59,7 @@ export function ProductForm({
             name="defaultRate"
             min="0"
             step="0.01"
-            defaultValue={product?.defaultRate ?? 0}
+            defaultValue={product?.defaultRate ?? ""}
           />
         </div>
         <div className="sm:col-span-2">

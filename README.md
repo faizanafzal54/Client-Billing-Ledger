@@ -1,9 +1,6 @@
 # Asghar Ali Chemicals — Client Billing Ledger
 
-Mobile-responsive invoicing and sales ledger for **Asghar Ali Chemicals**. Only two accounts can sign in:
-
-- `asgharumair809@gmail.com`
-- `faizanafzal2924@gmail.com`
+Mobile-responsive invoicing and sales ledger for **Asghar Ali Chemicals**.
 
 ## Features
 

@@ -63,21 +63,6 @@ export function StatCard({
   )
 }
 
-export function StatusBadge({ status }: { status: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center justify-center rounded-full px-2.5 py-[0.35rem] text-[11px] font-semibold uppercase leading-none tracking-wide",
-        status === "paid" && "status-paid",
-        status === "partial" && "status-partial",
-        status === "unpaid" && "status-unpaid",
-      )}
-    >
-      {status}
-    </span>
-  )
-}
-
 export function EmptyState({
   title,
   description,

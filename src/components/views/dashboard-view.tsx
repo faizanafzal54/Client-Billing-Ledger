@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { PageHeader, StatCard, StatusBadge, EmptyState } from "@/components/ui"
+import { PageHeader, StatCard, EmptyState } from "@/components/ui"
 import { DashboardSkeleton, LoadError } from "@/components/skeletons"
 import { useApi } from "@/lib/client-data"
 import { formatPKR } from "@/lib/money"
@@ -21,7 +21,6 @@ type DashboardPayload = {
     clientNumber: string
     date: string
     total: number
-    status: string
     clientName: string
   }>
   topProducts: Array<{ name: string; qty: number; amount: number }>
@@ -116,7 +115,6 @@ export function DashboardView() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm">{formatPKR(invoice.total)}</p>
-                      <StatusBadge status={invoice.status} />
                     </div>
                   </Link>
                 </li>

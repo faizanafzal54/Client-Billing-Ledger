@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 import { ClientForm, DeleteClientButton } from "@/components/client-form"
 import { ClientLedger } from "@/components/client-ledger"
 import { PaymentForm } from "@/components/payment-form"
-import { PageHeader, StatCard, StatusBadge } from "@/components/ui"
+import { PageHeader, StatCard } from "@/components/ui"
 import { CardListSkeleton, LoadError, PageHeaderSkeleton, StatRowSkeleton, TableSkeleton } from "@/components/skeletons"
 import { useApi } from "@/lib/client-data"
 import { formatNumber, formatPKR } from "@/lib/money"
@@ -34,12 +34,12 @@ type ClientDetailPayload = {
     clientNumber: string
     date: string
     total: number
-    status: string
   }>
   ledger: Array<{
     id: string
     date: string
     type: "invoice" | "payment"
+    kind?: "credit" | "debit"
     reference: string
     debit: number
     credit: number
@@ -49,7 +49,6 @@ type ClientDetailPayload = {
     invoiceId?: string
     paymentReference?: string
   }>
-  invoiceOptions: Array<{ id: string; label: string }>
 }
 
 export function ClientDetailView() {
@@ -74,7 +73,7 @@ export function ClientDetailView() {
     return <LoadError message={error === "not-found" ? "Client not found." : "Could not load this page."} />
   }
 
-  const { client, billed, paid, outstanding, ledger, products, company, invoices, invoiceOptions } = data
+  const { client, billed, paid, outstanding, ledger, products, company, invoices } = data
 
   return (
     <div>
@@ -99,7 +98,6 @@ export function ClientDetailView() {
           clientId={client.id}
           clientName={client.name}
           company={company}
-          invoices={invoiceOptions}
           ledger={ledger}
         />
 
@@ -107,11 +105,11 @@ export function ClientDetailView() {
           <section className="card p-4 sm:p-5">
             <h2 className="font-display text-xl">Receive payment</h2>
             <p className="mb-4 text-sm text-muted">
-              Applies to this client ledger. Leave invoice blank for a general receipt.
+              Credit records money received. Debit adds a previous pending amount to this client.
             </p>
-            <PaymentForm clientId={client.id} remaining={outstanding} invoices={invoiceOptions} />
+            <PaymentForm clientId={client.id} />
           </section>
-          <section className="card p-4 sm:p-5">
+          {/* <section className="card p-4 sm:p-5">
             <h2 className="font-display text-xl">Product mix</h2>
             <div className="mt-3 space-y-3">
               {products.length === 0 ? (
@@ -133,7 +131,7 @@ export function ClientDetailView() {
                 ))
               )}
             </div>
-          </section>
+          </section> */}
         </div>
       </div>
 
@@ -153,7 +151,6 @@ export function ClientDetailView() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm">{formatPKR(invoice.total)}</p>
-                  <StatusBadge status={invoice.status} />
                 </div>
               </Link>
             </li>
