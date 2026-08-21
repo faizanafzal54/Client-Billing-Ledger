@@ -106,11 +106,16 @@ export function LedgerSheet({
                   <tr key={`${row.type}-${row.id}`}>
                     <td style={{ padding: "8px 10px", borderTop: "1px solid #d8d0c2" }}>{formatDate(row.date)}</td>
                     <td style={{ padding: "8px 10px", borderTop: "1px solid #d8d0c2" }}>
-                      {row.type === "invoice"
-                        ? `Invoice ${row.reference}`
-                        : row.kind === "debit"
-                          ? `Previous pending · ${row.reference}`
-                          : `Payment · ${row.reference}`}
+                      <div>
+                        {row.type === "invoice"
+                          ? `Invoice ${row.reference}`
+                          : row.kind === "debit"
+                            ? `Previous pending · ${row.reference}`
+                            : `Payment · ${row.reference}`}
+                        {row.notes?.trim() ? (
+                          <div style={{ marginTop: 2, fontSize: 12, color: "#6b645b" }}>{row.notes.trim()}</div>
+                        ) : null}
+                      </div>
                     </td>
                     <td style={{ padding: "8px 10px", borderTop: "1px solid #d8d0c2", textAlign: "right" }}>
                       {row.debit ? formatPKR(row.debit) : "—"}

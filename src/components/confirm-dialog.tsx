@@ -82,11 +82,17 @@ export function ConfirmDeleteButton({
   title,
   description,
   confirmLabel,
+  className = "btn-danger",
+  ariaLabel,
+  children = "Delete",
   onConfirm,
 }: {
   title: string
   description: string
   confirmLabel?: string
+  className?: string
+  ariaLabel?: string
+  children?: React.ReactNode
   onConfirm: () => Promise<ActionResult | void>
 }) {
   const [open, setOpen] = useState(false)
@@ -96,14 +102,15 @@ export function ConfirmDeleteButton({
   return (
     <>
       <button
-        className="btn-danger"
+        className={className}
         type="button"
+        aria-label={ariaLabel}
         onClick={() => {
           setError("")
           setOpen(true)
         }}
       >
-        Delete
+        {children}
       </button>
       <ConfirmDialog
         open={open}

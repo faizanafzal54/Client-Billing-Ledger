@@ -4,7 +4,8 @@ import { useState, useTransition } from "react"
 import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { X } from "lucide-react"
-import { recordPayment, updatePayment } from "@/app/actions/payments"
+import { deletePayment, recordPayment, updatePayment } from "@/app/actions/payments"
+import { ConfirmDeleteButton } from "@/components/confirm-dialog"
 import { Spinner } from "@/components/ui"
 import { notifyDataChanged } from "@/lib/client-data"
 import { formatPKR } from "@/lib/money"
@@ -154,6 +155,50 @@ export function PaymentForm({
   )
 }
 
+export function DeletePaymentButton({
+  paymentId,
+  kind,
+  className,
+  ariaLabel,
+  onDone,
+  children,
+}: {
+  paymentId: string
+  kind?: "credit" | "debit"
+  className?: string
+  ariaLabel?: string
+  onDone?: () => void
+  children?: React.ReactNode
+}) {
+  const router = useRouter()
+  const isDebit = kind === "debit"
+
+  return (
+    <ConfirmDeleteButton
+      className={className}
+      ariaLabel={ariaLabel}
+      title={isDebit ? "Delete this debit?" : "Delete this payment?"}
+      description={
+        isDebit
+          ? "This previous pending amount will be removed from the ledger."
+          : "This payment will be removed from the ledger."
+      }
+      onConfirm={async () => {
+        const formData = new FormData()
+        formData.set("id", paymentId)
+        const result = await deletePayment(formData)
+        if (result.ok) {
+          router.refresh()
+          onDone?.()
+        }
+        return result
+      }}
+    >
+      {children ?? "Delete"}
+    </ConfirmDeleteButton>
+  )
+}
+
 export function EditPaymentDialog({
   clientId,
   payment,
@@ -184,6 +229,9 @@ export function EditPaymentDialog({
           payment={payment}
           onDone={onClose}
         />
+        <div className="mt-4 border-t border-line pt-4">
+          <DeletePaymentButton paymentId={payment.id} kind={payment.kind} onDone={onClose} />
+        </div>
       </div>
     </div>,
     document.body,

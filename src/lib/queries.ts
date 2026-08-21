@@ -133,7 +133,7 @@ export async function getClientReport(clientId: string) {
         include: { items: true, payments: true },
         orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       },
-      payments: { orderBy: { date: "desc" } },
+      payments: { orderBy: [{ date: "asc" }, { createdAt: "asc" }] },
     },
   })
   if (!client) return null
@@ -145,14 +145,13 @@ export async function getClientReport(clientId: string) {
     ...client.invoices.map((invoice) => ({
       id: invoice.id,
       date: invoice.date,
+      createdAt: invoice.createdAt,
       type: "invoice" as const,
       kind: "debit" as const,
       reference: `${displayInvoiceNo(invoice.globalNumber)} / ${invoice.clientNumber}`,
       debit: invoice.total,
       credit: 0,
-      note: invoice.notes,
-      method: "",
-      notes: "",
+      notes: invoice.notes,
       invoiceId: "",
       paymentReference: "",
     })),
@@ -161,22 +160,26 @@ export async function getClientReport(clientId: string) {
       return {
         id: payment.id,
         date: payment.date,
+        createdAt: payment.createdAt,
         type: "payment" as const,
         kind: isDebit ? ("debit" as const) : ("credit" as const),
         reference: payment.reference || payment.method,
         debit: isDebit ? payment.amount : 0,
         credit: isDebit ? 0 : payment.amount,
-        note: payment.notes,
         method: payment.method,
         notes: payment.notes,
         invoiceId: payment.invoiceId || "",
         paymentReference: payment.reference,
       }
     }),
-  ].sort((a, b) => a.date.getTime() - b.date.getTime())
+  ].sort((a, b) => {
+    const byDate = a.date.getTime() - b.date.getTime()
+    if (byDate !== 0) return byDate
+    return a.createdAt.getTime() - b.createdAt.getTime()
+  })
 
   let running = 0
-  const ledgerWithBalance = ledger.map((row) => {
+  const ledgerWithBalance = ledger.map(({ createdAt: _createdAt, ...row }) => {
     running += row.debit - row.credit
     return { ...row, balance: running }
   })

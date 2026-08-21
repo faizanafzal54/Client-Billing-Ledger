@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { requireUser } from "@/lib/auth"
 import { nextInvoiceNumbers } from "@/lib/invoices"
 import { prisma } from "@/lib/prisma"
+import { dateAtTime, todayISO } from "@/lib/utils"
 import type { ActionResult } from "@/lib/definitions"
 
 type LineInput = {
@@ -70,7 +71,7 @@ export async function createInvoice(formData: FormData): Promise<ActionResult> {
 
   const taxPercent = Number(formData.get("taxPercent") || 0)
   const discount = Number(formData.get("discount") || 0)
-  const date = new Date(String(formData.get("date") || new Date().toISOString()))
+  const date = dateAtTime(String(formData.get("date") || todayISO()))
   const dueRaw = String(formData.get("dueDate") || "")
   const amounts = totals(lines, taxPercent, discount)
   const numbers = await nextInvoiceNumbers(client.id, client.prefix)
@@ -131,7 +132,7 @@ export async function updateInvoice(formData: FormData): Promise<ActionResult> {
 
   const taxPercent = Number(formData.get("taxPercent") || 0)
   const discount = Number(formData.get("discount") || 0)
-  const date = new Date(String(formData.get("date") || existing.date.toISOString()))
+  const date = dateAtTime(String(formData.get("date") || existing.date.toISOString()), existing.date)
   const dueRaw = String(formData.get("dueDate") || "")
   const amounts = totals(lines, taxPercent, discount)
 
@@ -187,5 +188,5 @@ export async function deleteInvoice(formData: FormData): Promise<ActionResult> {
   revalidatePath("/dashboard")
   revalidatePath(`/clients/${invoice.clientId}`)
   revalidatePath("/reports")
-  redirect("/invoices")
+  return { ok: true }
 }

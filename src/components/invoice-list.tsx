@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Trash2 } from "lucide-react"
+import { DeleteInvoiceButton } from "@/components/delete-invoice-button"
 import { EmptyState } from "@/components/ui"
 import type { InvoiceListFilters } from "@/lib/invoice-list"
 import { invoiceListHref } from "@/lib/invoice-list"
@@ -179,18 +180,19 @@ export function InvoiceList({
       ) : (
         <>
           <div className="card overflow-hidden">
-            <div className="hidden grid-cols-[1.2fr_1.1fr_0.8fr_0.9fr] gap-3 border-b border-line bg-cream px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
+            <div className="hidden grid-cols-[1.2fr_1.1fr_0.8fr_0.9fr_auto] gap-3 border-b border-line bg-cream px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted md:grid">
               <span>Client</span>
               <span>Numbers</span>
               <span>Date</span>
               <span>Total</span>
+              <span className="sr-only">Actions</span>
             </div>
             <ul>
               {invoices.map((invoice) => (
-                <li key={invoice.id} className="border-b border-line last:border-0">
+                <li key={invoice.id} className="flex items-center gap-2 border-b border-line last:border-0">
                   <Link
                     href={`/invoices/${invoice.id}`}
-                    className="flex items-center justify-between gap-3 px-4 py-3 md:grid md:grid-cols-[1.2fr_1.1fr_0.8fr_0.9fr] md:items-center"
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 px-4 py-3 md:grid md:grid-cols-[1.2fr_1.1fr_0.8fr_0.9fr] md:items-center"
                   >
                     <div className="min-w-0">
                       <p className="font-bold text-brass-dark">{invoice.clientName}</p>
@@ -202,8 +204,19 @@ export function InvoiceList({
                       {displayInvoiceNo(invoice.globalNumber)} · {invoice.clientNumber}
                     </p>
                     <p className="hidden text-sm text-muted md:block">{formatDate(invoice.date)}</p>
-                    <p className="shrink-0 text-sm md:text-left">{formatPKR(invoice.total)}</p>
+                    <p className="hidden shrink-0 text-sm md:block md:text-left">{formatPKR(invoice.total)}</p>
+                    <p className="shrink-0 text-sm md:hidden">{formatPKR(invoice.total)}</p>
                   </Link>
+                  <div className="shrink-0 pr-3">
+                    <DeleteInvoiceButton
+                      id={invoice.id}
+                      redirectTo={null}
+                      className="btn-ghost px-2 py-1 text-bad"
+                      ariaLabel={`Delete ${displayInvoiceNo(invoice.globalNumber)}`}
+                    >
+                      <Trash2 size={16} />
+                    </DeleteInvoiceButton>
+                  </div>
                 </li>
               ))}
             </ul>

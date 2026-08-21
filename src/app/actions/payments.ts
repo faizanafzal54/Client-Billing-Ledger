@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import type { ActionResult } from "@/lib/definitions"
+import { dateAtTime, todayISO } from "@/lib/utils"
 
 export async function recordPayment(formData: FormData): Promise<ActionResult> {
   await requireUser()
@@ -20,7 +21,7 @@ export async function recordPayment(formData: FormData): Promise<ActionResult> {
         clientId,
         amount,
         kind,
-        date: new Date(String(formData.get("date") || new Date().toISOString())),
+        date: dateAtTime(String(formData.get("date") || todayISO())),
         method: String(formData.get("method") || "cash"),
         reference: String(formData.get("reference") || "").trim(),
         notes: String(formData.get("notes") || "").trim(),
@@ -59,7 +60,7 @@ export async function updatePayment(formData: FormData): Promise<ActionResult> {
       data: {
         amount,
         kind,
-        date: new Date(String(formData.get("date") || existing.date.toISOString())),
+        date: dateAtTime(String(formData.get("date") || existing.date.toISOString()), existing.date),
         method: String(formData.get("method") || existing.method),
         reference: String(formData.get("reference") || "").trim(),
         notes: String(formData.get("notes") || "").trim(),

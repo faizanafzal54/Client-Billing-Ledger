@@ -2,8 +2,8 @@
 
 import { useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Download, Pencil } from "lucide-react"
-import { EditPaymentDialog, type PaymentValues } from "@/components/payment-form"
+import { Download, Pencil, Trash2 } from "lucide-react"
+import { DeletePaymentButton, EditPaymentDialog, type PaymentValues } from "@/components/payment-form"
 import { LedgerSheet, type LedgerCompany, type LedgerMonthGroup, type LedgerRow } from "@/components/ledger-sheet"
 import { Spinner } from "@/components/ui"
 import { formatPKR } from "@/lib/money"
@@ -25,6 +25,22 @@ function paymentValues(row: LedgerRow): PaymentValues {
 function paymentLabel(row: LedgerRow) {
   if (row.kind === "debit") return `Previous pending · ${row.reference}`
   return `Payment · ${row.reference}`
+}
+
+function Particulars({ row }: { row: LedgerRow }) {
+  const notes = row.notes?.trim()
+  return (
+    <div className="text-sm">
+      {row.type === "invoice" ? (
+        <Link href={`/invoices/${row.id}`} className="underline-offset-2 hover:underline">
+          Invoice {row.reference}
+        </Link>
+      ) : (
+        <p>{paymentLabel(row)}</p>
+      )}
+      {notes ? <p className="mt-0.5 text-xs text-muted">{notes}</p> : null}
+    </div>
+  )
 }
 
 function groupsFor(ledger: LedgerRow[], month: string): LedgerMonthGroup[] {
@@ -190,13 +206,7 @@ export function ClientLedger({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs text-muted">{formatDate(row.date)}</p>
-                      {row.type === "invoice" ? (
-                        <Link href={`/invoices/${row.id}`} className="block text-sm underline-offset-2 hover:underline">
-                          Invoice {row.reference}
-                        </Link>
-                      ) : (
-                        <p className="text-sm">{paymentLabel(row)}</p>
-                      )}
+                      <Particulars row={row} />
                     </div>
                     <div className="flex shrink-0 items-start gap-1">
                       <div className="text-right">
@@ -205,18 +215,31 @@ export function ClientLedger({
                         {row.credit ? <p className="text-xs text-good">Cr {formatPKR(row.credit)}</p> : null}
                       </div>
                       {row.type === "payment" ? (
-                        <button
-                          className="group relative rounded-md p-1 text-muted"
-                          type="button"
-                          onClick={() => setEditing(row)}
-                          title="Edit payment"
-                          aria-label="Edit payment"
-                        >
-                          <Pencil size={14} />
-                          <span className="pointer-events-none absolute bottom-full right-0 mb-1 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-cream group-hover:block group-focus-visible:block">
-                            Edit payment
-                          </span>
-                        </button>
+                        <>
+                          <button
+                            className="group relative rounded-md p-1 text-muted"
+                            type="button"
+                            onClick={() => setEditing(row)}
+                            title="Edit payment"
+                            aria-label="Edit payment"
+                          >
+                            <Pencil size={14} />
+                            <span className="pointer-events-none absolute bottom-full right-0 mb-1 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-cream group-hover:block group-focus-visible:block">
+                              Edit payment
+                            </span>
+                          </button>
+                          <DeletePaymentButton
+                            paymentId={row.id}
+                            kind={row.kind}
+                            className="group relative rounded-md p-1 text-muted hover:text-bad"
+                            ariaLabel="Delete payment"
+                          >
+                            <Trash2 size={14} />
+                            <span className="pointer-events-none absolute bottom-full right-0 mb-1 hidden whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs text-cream group-hover:block group-focus-visible:block">
+                              Delete payment
+                            </span>
+                          </DeletePaymentButton>
+                        </>
                       ) : null}
                     </div>
                   </div>
@@ -276,28 +299,33 @@ export function ClientLedger({
                     <tr key={`${row.type}-${row.id}`} className="border-t border-line">
                       <td className="px-4 py-2">{formatDate(row.date)}</td>
                       <td className="px-4 py-2">
-                        {row.type === "invoice" ? (
-                          <Link href={`/invoices/${row.id}`} className="underline-offset-2 hover:underline">
-                            Invoice {row.reference}
-                          </Link>
-                        ) : (
-                          paymentLabel(row)
-                        )}
+                        <Particulars row={row} />
                       </td>
                       <td className="px-4 py-2 text-right">{row.debit ? formatPKR(row.debit) : "—"}</td>
                       <td className="px-4 py-2 text-right">{row.credit ? formatPKR(row.credit) : "—"}</td>
                       <td className="px-4 py-2 text-right">{formatPKR(row.balance)}</td>
                       <td className="px-4 py-2 text-right">
                         {row.type === "payment" ? (
-                          <button
-                            className="btn-ghost px-2 py-1 text-xs"
-                            type="button"
-                            onClick={() => setEditing(row)}
-                            aria-label="Edit payment"
-                          >
-                            <Pencil size={14} />
-                            Edit
-                          </button>
+                          <div className="flex justify-end gap-1">
+                            <button
+                              className="btn-ghost px-2 py-1 text-xs"
+                              type="button"
+                              onClick={() => setEditing(row)}
+                              aria-label="Edit payment"
+                            >
+                              <Pencil size={14} />
+                              Edit
+                            </button>
+                            <DeletePaymentButton
+                              paymentId={row.id}
+                              kind={row.kind}
+                              className="btn-ghost px-2 py-1 text-xs text-bad"
+                              ariaLabel="Delete payment"
+                            >
+                              <Trash2 size={14} />
+                              Delete
+                            </DeletePaymentButton>
+                          </div>
                         ) : null}
                       </td>
                     </tr>,

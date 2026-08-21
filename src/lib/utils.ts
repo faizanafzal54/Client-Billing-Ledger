@@ -6,6 +6,13 @@ export function todayISO() {
   return new Date().toISOString().slice(0, 10)
 }
 
+/** YYYY-MM-DD from a date input, keeping the local time of `at` (defaults to now). */
+export function dateAtTime(value: string, at = new Date()) {
+  const [year, month, day] = String(value || "").slice(0, 10).split("-").map(Number)
+  if (!year || !month || !day) return at
+  return new Date(year, month - 1, day, at.getHours(), at.getMinutes(), at.getSeconds(), at.getMilliseconds())
+}
+
 export function formatDate(value: Date | string) {
   const date = typeof value === "string" ? new Date(value) : value
   return date.toLocaleDateString("en-GB", {
