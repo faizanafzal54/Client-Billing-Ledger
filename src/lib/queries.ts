@@ -27,14 +27,22 @@ export function paymentSides(payments: Array<{ amount: number; kind?: string | n
   return { credit, debit }
 }
 
+export function ledgerTotals(
+  invoiceTotal: number,
+  payments: Array<{ amount: number; kind?: string | null }>,
+) {
+  const { credit, debit } = paymentSides(payments)
+  const billed = invoiceTotal + debit
+  return { billed, paid: credit, outstanding: billed - credit }
+}
+
 export async function clientBalance(clientId: string) {
   const [invoices, payments] = await Promise.all([
     prisma.invoice.aggregate({ where: { clientId }, _sum: { total: true } }),
     prisma.payment.findMany({ where: { clientId }, select: { amount: true, kind: true } }),
   ])
-  const billed = invoices._sum.total ?? 0
-  const { credit, debit } = paymentSides(payments)
-  return { billed, paid: credit, outstanding: billed + debit - credit }
+  const invoiceTotal = invoices._sum.total ?? 0
+  return ledgerTotals(invoiceTotal, payments)
 }
 
 export async function getDashboardData() {
@@ -52,8 +60,8 @@ export async function getDashboardData() {
     prisma.product.findMany(),
   ])
 
-  const billed = invoices.reduce((sum, invoice) => sum + invoice.total, 0)
-  const { credit: paid, debit: extraDebit } = paymentSides(payments)
+  const invoiceTotal = invoices.reduce((sum, invoice) => sum + invoice.total, 0)
+  const { billed, paid, outstanding } = ledgerTotals(invoiceTotal, payments)
   const monthSales = invoices
     .filter((invoice) => invoice.date >= monthStart)
     .reduce((sum, invoice) => sum + invoice.total, 0)
@@ -82,14 +90,14 @@ export async function getDashboardData() {
     .map((client) => {
       const clientInvoices = invoices.filter((invoice) => invoice.clientId === client.id)
       const clientPayments = payments.filter((payment) => payment.clientId === client.id)
-      const clientBilled = clientInvoices.reduce((sum, invoice) => sum + invoice.total, 0)
-      const { credit: clientPaid, debit: clientDebit } = paymentSides(clientPayments)
+      const clientInvoiceTotal = clientInvoices.reduce((sum, invoice) => sum + invoice.total, 0)
+      const totals = ledgerTotals(clientInvoiceTotal, clientPayments)
       return {
         id: client.id,
         name: client.name,
-        billed: clientBilled,
-        paid: clientPaid,
-        outstanding: clientBilled + clientDebit - clientPaid,
+        billed: totals.billed,
+        paid: totals.paid,
+        outstanding: totals.outstanding,
         invoices: clientInvoices.length,
       }
     })
@@ -112,7 +120,7 @@ export async function getDashboardData() {
   return {
     billed,
     paid,
-    outstanding: billed + extraDebit - paid,
+    outstanding,
     monthSales,
     yearSales,
     invoiceCount: invoices.length,
@@ -138,8 +146,8 @@ export async function getClientReport(clientId: string) {
   })
   if (!client) return null
 
-  const billed = client.invoices.reduce((sum, invoice) => sum + invoice.total, 0)
-  const { credit: paid, debit: extraDebit } = paymentSides(client.payments)
+  const invoiceTotal = client.invoices.reduce((sum, invoice) => sum + invoice.total, 0)
+  const { billed, paid, outstanding } = ledgerTotals(invoiceTotal, client.payments)
 
   const ledger = [
     ...client.invoices.map((invoice) => ({
@@ -203,7 +211,7 @@ export async function getClientReport(clientId: string) {
     client,
     billed,
     paid,
-    outstanding: billed + extraDebit - paid,
+    outstanding,
     ledger: ledgerWithBalance,
     products: [...productSales.values()].sort((a, b) => b.amount - a.amount),
   }

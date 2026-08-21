@@ -1,5 +1,5 @@
 import { requireApiUser, json } from "@/lib/api-auth"
-import { paymentSides } from "@/lib/queries"
+import { ledgerTotals } from "@/lib/queries"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
@@ -15,8 +15,8 @@ export async function GET() {
 
   return json(
     clients.map((client) => {
-      const billed = client.invoices.reduce((sum, invoice) => sum + invoice.total, 0)
-      const { credit: paid, debit } = paymentSides(client.payments)
+      const invoiceTotal = client.invoices.reduce((sum, invoice) => sum + invoice.total, 0)
+      const { billed, outstanding } = ledgerTotals(invoiceTotal, client.payments)
       return {
         id: client.id,
         name: client.name,
@@ -24,7 +24,7 @@ export async function GET() {
         city: client.city,
         phone: client.phone,
         billed,
-        outstanding: billed + debit - paid,
+        outstanding,
         invoices: client.invoices.length,
       }
     }),
